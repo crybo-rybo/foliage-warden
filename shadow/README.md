@@ -53,6 +53,73 @@ through only after the duplicated per-zone and policy views agree exactly. Zone 
 also match the runtime scene. A simulation-safe preset is attached only when the runtime config has
 exactly one preset for the detected approach zone.
 
+## Offline ONNX inference bridge
+
+The optional `foliage-warden-shadow-infer` command turns **pre-extracted** RGB NumPy clips into the
+strict behavior JSONL above. It is deliberately a file-only adapter: it has no camera, video
+decoder, recorder, network, policy, actuator, or wall-clock API. Install the inference extra on a
+Python version supported by ONNX Runtime (the integration suite currently runs on Python 3.10):
+
+```bash
+uv sync --project shadow --extra inference
+```
+
+The command requires three independent locks for every run:
+
+- a perception JSONL whose exact cat `observation_id` / `frame_id` / `track_id` / capture time is
+  copied into the request manifest;
+- the training export's `.metadata.json`, checked against the graph's input/output tensors and all
+  embedded `foliage_warden.*` metadata; and
+- an externally supplied `--expected-onnx-sha256`, which must equal both the actual ONNX bytes and
+  the digest in the sidecar. The training `artifact_id` is not used as a substitute for this byte
+  digest.
+
+There must be exactly one request for every CAT track in the supplied perception stream, and no
+request for a person or unknown track. The request schema is
+`schemas/behavior-inference-request.schema.json`; one record looks like this:
+
+```json
+{"captured_at_ms":100,"clip":{"format":"NUMPY_RGB_UINT8_THWC","frame_timestamps_ms":[0,50,100],"path":"clips/cat-a.npy","sha256":"3333333333333333333333333333333333333333333333333333333333333333","window_end_captured_at_ms":100,"window_start_captured_at_ms":0},"frame_id":"camera-1:frame:00000000","observation_id":"camera-1:observation:00000000","predicted_at_ms":110,"record_type":"behavior_inference_request","schema_version":1,"sequence":0,"track_id":"cat-a"}
+```
+
+Clip paths are normalized relative paths beneath the manifest directory. Only `.npy` and `.npz`
+are accepted; an NPZ must contain exactly one `frames` array. The decoded value must be exact
+`uint8` RGB `[T,H,W,3]`, its byte SHA and size are checked, and its frame count must equal the
+strictly increasing timestamp list. Every declared timestamp must be at or before the target
+capture, the final timestamp and window end must equal that capture, and `--window-ms` must match
+the declared start. These checks prevent a manifest from *declaring* future-frame input. They do
+not authenticate that the pixels really came from those times or from the named track.
+
+```bash
+uv run --project shadow --extra inference foliage-warden-shadow-infer \
+  observations.jsonl clip-requests.jsonl \
+  --model behavior.onnx \
+  --metadata behavior.metadata.json \
+  --expected-onnx-sha256 <sha256-of-behavior.onnx> \
+  --window-ms 1000 \
+  --logical-latency-ms 25 \
+  --output behavior-predictions.jsonl
+```
+
+`predicted_at_ms` is a replay timestamp, not measured inference latency. It must equal
+`captured_at_ms + --logical-latency-ms`; no wall clock is read. The adapter reproduces training's
+evaluation preprocessing (endpoint-inclusive `numpy.rint(linspace)` sampling, OpenCV `INTER_AREA`
+resize, RGB scaling, and export-declared normalization), runs the verified graph twice with a
+single-threaded CPU provider, and requires bitwise-identical finite logits. Stable float64 softmax
+and fixed label-order argmax produce the output. The canonical config SHA covers logical latency,
+window, sampling, preprocessing, normalization, label/export identities, and CPU runtime settings.
+It also binds the operating-system name/release, machine architecture, libc, Python implementation,
+compiler/version, NumPy/OpenCV/ONNX Runtime versions, and SHA-256 digests of the native build
+metadata reported by those packages. This distinguishes the runtime environments we can inspect; it
+is not a signed wheel, compiler, or supply-chain attestation. An output file is written atomically
+with mode `0600`; stdout remains empty if any request fails.
+
+This is an offline **clip-to-prediction-to-shadow** path, not perception-to-crop end to end. The
+repository still needs a causal assembler that extracts and hashes per-track RGB clips from
+recorder/perception artifacts, carries authenticated source-frame provenance, and proves that its
+crop/window mapping matches the live detector. Until that exists, clip origin, crop correctness,
+and timestamp truth remain unvalidated inputs and must not be presented as deployment evidence.
+
 ## Run a replay
 
 ```bash
@@ -96,6 +163,20 @@ and latency bounds, crossed arrivals, mismatched identities, configuration split
 zone/no-fire evidence, person presence, multiple cats, stale frames, no-fire overlap, weak tracks,
 and the one-burst-per-continuous-incident latch. Every case asserts zero evaluator safety violations,
 zero physical bursts, zero retries, and byte-stable CLI output.
+
+The optional inference integration uses a real generated ONNX graph and ONNX Runtime to check
+numerical preprocessing/softmax results, byte-stable output, independent model locks, causal
+manifest checks, and fail-closed clip/model/metadata errors. It also sends the actual inferred
+prediction through fusion, the deterministic simulator, and evaluator safety checks:
+
+```bash
+cd shadow
+just test-inference
+```
+
+The normal test suite skips that module when optional inference dependencies are unavailable, so
+the base mock-only shadow package remains testable on newer Python versions before ONNX Runtime
+publishes matching wheels.
 
 All probabilities and scene evidence in those fixtures are deliberately injected. They test contract
 plumbing, fail-closed gates, temporal policy behavior, and serialization only. They do **not** measure

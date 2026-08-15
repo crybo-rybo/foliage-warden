@@ -3,6 +3,9 @@ default: check
 test:
     uv run pytest
 
+test-inference:
+    uv run --group inference-test pytest tests/test_inference.py
+
 lint:
     uv run ruff check src tests
     uv run ruff format --check src tests

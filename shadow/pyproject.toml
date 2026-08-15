@@ -13,14 +13,28 @@ dependencies = [
   "foliage-warden-simulator",
 ]
 
+[project.optional-dependencies]
+inference = [
+  "numpy>=1.26,<3",
+  "onnxruntime>=1.18,<1.24",
+  "opencv-python-headless>=4.10,<5",
+]
+
 [dependency-groups]
 dev = [
   "pytest>=8.3,<10",
   "ruff>=0.12,<1",
 ]
+inference-test = [
+  "numpy>=1.26,<3",
+  "onnx>=1.16",
+  "onnxruntime>=1.18,<1.24",
+  "opencv-python-headless>=4.10,<5",
+]
 
 [project.scripts]
 foliage-warden-shadow = "foliage_warden_shadow.cli:main"
+foliage-warden-shadow-infer = "foliage_warden_shadow.infer_cli:main"
 
 [tool.uv.sources]
 foliage-warden-eval = { path = "../python", editable = true }
@@ -31,6 +45,7 @@ packages = ["src/foliage_warden_shadow"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "schemas/behavior-prediction.schema.json" = "foliage_warden_shadow/schemas/behavior-prediction.schema.json"
+"schemas/behavior-inference-request.schema.json" = "foliage_warden_shadow/schemas/behavior-inference-request.schema.json"
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
