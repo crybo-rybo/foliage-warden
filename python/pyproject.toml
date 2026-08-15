@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foliage-warden-eval"
+version = "0.1.0"
+description = "Deterministic event-level evaluation and replay tooling for Foliage Warden"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Foliage Warden contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+foliage-warden-eval = "foliage_warden_eval.cli:main"
+foliage-warden-split = "foliage_warden_eval.split_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/foliage_warden_eval"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]

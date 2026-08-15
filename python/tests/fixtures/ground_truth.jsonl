@@ -1,0 +1,5 @@
+{"behavior":"EATING","end_ms":4000,"event_id":"gt-eating-1","record_type":"ground_truth_event","schema_version":1,"session_id":"session-day-1","staged_safe":true,"start_ms":1000,"zone_id":"pot-1"}
+{"behavior":"DIGGING","end_ms":11000,"event_id":"gt-digging-1","record_type":"ground_truth_event","schema_version":1,"session_id":"session-day-1","staged_safe":true,"start_ms":8000,"zone_id":"pot-1"}
+{"behavior":"EATING","end_ms":5000,"event_id":"gt-eating-missed","record_type":"ground_truth_event","schema_version":1,"session_id":"session-day-2","staged_safe":true,"start_ms":2000,"zone_id":"pot-2"}
+{"behavior":"SNIFFING","end_ms":10000,"event_id":"gt-negative-sniffing","record_type":"ground_truth_event","schema_version":1,"session_id":"session-day-2","staged_safe":false,"start_ms":7000,"zone_id":"pot-2"}
+
