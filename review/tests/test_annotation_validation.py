@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from foliage_warden_review.validation import AnnotationError, validate_annotation
-
 from tests.support import ManifestTestCase
 
 

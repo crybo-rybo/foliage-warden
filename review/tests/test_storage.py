@@ -7,7 +7,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from foliage_warden_review.storage import AnnotationStore, RevisionConflict
-
 from tests.support import ManifestTestCase
 
 

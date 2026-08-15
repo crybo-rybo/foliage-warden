@@ -4,7 +4,6 @@ import json
 import os
 
 from foliage_warden_review.manifest import ManifestError, load_manifest
-
 from tests.support import ManifestTestCase
 
 

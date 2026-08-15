@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from foliage_warden_eval.cli import main
 from foliage_warden_eval.evaluator import EvaluationInputError, evaluate
 from foliage_warden_eval.jsonl import read_jsonl

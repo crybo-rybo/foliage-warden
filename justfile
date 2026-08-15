@@ -86,14 +86,14 @@ validate-contracts: sync-python
     uv run --project "{{python_dir}}" --extra dev python "{{project_root}}/tools/validate_contracts.py"
 
 lint: sync-python sync-simulator sync-perception sync-training sync-review sync-recorder sync-shadow sync-detection-eval
-    uv run --project "{{python_dir}}" --extra dev ruff check "{{python_dir}}/src" "{{python_dir}}/tests" "{{project_root}}/tools/validate_contracts.py" "{{project_root}}/tools/jetson_probe.py"
-    uv run --project "{{simulator_dir}}" --extra dev ruff check "{{simulator_dir}}/src" "{{simulator_dir}}/tests"
-    uv run --project "{{perception_dir}}" --extra desktop --group dev ruff check "{{perception_dir}}" "{{project_root}}/tools/fetch_model.py" "{{project_root}}/tools/evaluate_synthetic_scenes.py"
-    uv run --project "{{training_dir}}" --extra dev ruff check "{{training_dir}}"
-    uv run --project "{{review_dir}}" --group dev ruff check "{{review_dir}}/src" "{{review_dir}}/tests"
-    uv run --project "{{recorder_dir}}" --group dev ruff check "{{recorder_dir}}"
-    uv run --project "{{shadow_dir}}" --group dev ruff check "{{shadow_dir}}/src" "{{shadow_dir}}/tests"
-    uv run --project "{{detection_eval_dir}}" --group dev ruff check "{{detection_eval_dir}}"
+    cd "{{python_dir}}" && uv run --extra dev ruff check src tests ../tools/validate_contracts.py ../tools/jetson_probe.py
+    cd "{{simulator_dir}}" && uv run --extra dev ruff check src tests
+    cd "{{perception_dir}}" && uv run --extra desktop --group dev ruff check . ../tools/fetch_model.py ../tools/evaluate_synthetic_scenes.py
+    cd "{{training_dir}}" && uv run --extra dev ruff check .
+    cd "{{review_dir}}" && uv run --group dev ruff check src tests
+    cd "{{recorder_dir}}" && uv run --group dev ruff check .
+    cd "{{shadow_dir}}" && uv run --group dev ruff check src tests
+    cd "{{detection_eval_dir}}" && uv run --group dev ruff check .
     shellcheck "{{training_dir}}/scripts/smoke.sh" "{{project_root}}/tools/verify_behavior_bridge.sh"
 
 test: test-cpp test-python test-simulator test-perception test-training test-review test-recorder test-shadow test-detection-eval test-calibration validate-contracts

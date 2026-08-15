@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from foliage_warden_eval.jsonl import read_jsonl, stable_json, write_jsonl
 from foliage_warden_eval.schemas import (
     Behavior,
