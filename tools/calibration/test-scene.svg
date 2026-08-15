@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#d9dfd6" />
+  <rect x="760" y="395" width="280" height="220" rx="24" fill="#9d603e" />
+  <ellipse cx="900" cy="365" rx="210" ry="110" fill="#43875a" />
+  <path d="M160 610h390l-70-180H230z" fill="#8092a0" />
+  <text x="48" y="72" font-family="sans-serif" font-size="36" fill="#24362b">Synthetic calibration fixture</text>
+</svg>

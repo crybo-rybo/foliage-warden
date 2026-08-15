@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Foliage Warden Scene Calibration</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <p class="eyebrow">Observe-only tooling</p>
+      <h1>Scene calibration</h1>
+      <p>
+        Draw normalized protected and safety regions over a still frame. Images stay in this browser;
+        this tool has no upload path.
+      </p>
+    </header>
+
+    <main>
+      <section class="controls" aria-label="Calibration controls">
+        <label>
+          Reference image
+          <input id="image-input" type="file" accept="image/*" />
+        </label>
+        <label>
+          Shape type
+          <select id="shape-type">
+            <option value="approach">Protected approach</option>
+            <option value="foliage">Foliage</option>
+            <option value="soil">Soil / pot</option>
+            <option value="no_fire">No-fire</option>
+            <option value="aim_preset">Safe aim preset</option>
+          </select>
+        </label>
+        <label>
+          Shape ID
+          <input id="shape-id" type="text" value="plant_1_approach" maxlength="64" />
+        </label>
+        <label id="zone-link-row" hidden>
+          Related zone
+          <select id="zone-link"></select>
+        </label>
+        <label id="hardware-target-row" hidden>
+          Future hardware target
+          <input id="hardware-target" type="text" value="disabled" maxlength="64" />
+        </label>
+
+        <div class="button-row">
+          <button id="finish" type="button">Finish polygon</button>
+          <button id="undo" type="button" class="secondary">Undo point</button>
+          <button id="remove" type="button" class="danger">Remove last shape</button>
+        </div>
+        <p id="status" role="status">Choose a reference image to begin.</p>
+        <ul id="shape-list" aria-label="Defined shapes"></ul>
+      </section>
+
+      <section class="workspace">
+        <div class="canvas-shell">
+          <canvas id="scene" width="1280" height="720" aria-label="Scene calibration canvas"></canvas>
+          <p id="empty-message">Reference image preview</p>
+        </div>
+        <p class="hint">
+          Click to add polygon vertices; double-click or use “Finish polygon” to close one. Aim
+          presets are added with one click. Coordinates are stored from 0 to 1, independent of
+          resolution.
+        </p>
+      </section>
+
+      <section class="export-panel">
+        <h2>Scene JSON</h2>
+        <textarea id="json-output" readonly spellcheck="false"></textarea>
+        <div class="button-row">
+          <button id="copy" type="button">Copy JSON</button>
+          <button id="download" type="button" class="secondary">Download</button>
+          <label class="import-label">
+            Import existing JSON
+            <input id="config-input" type="file" accept="application/json,.json" />
+          </label>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
+
