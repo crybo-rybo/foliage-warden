@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "models": {
+    "yolox_s_opencv_zoo": {
+      "description": "Apache-2.0 OpenCV Zoo YOLOX-S COCO detector baseline",
+      "filename": "object_detection_yolox_2022nov.onnx",
+      "format": "onnx",
+      "input": {
+        "color": "RGB",
+        "height": 640,
+        "width": 640
+      },
+      "license": "Apache-2.0",
+      "relevant_classes": {
+        "cat": 15,
+        "person": 0
+      },
+      "sha256": "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063",
+      "source_revision": "opencv/opencv_zoo@47534e27c9851bb1128ccc0102f1145e27f23f98",
+      "url": "https://media.githubusercontent.com/media/opencv/opencv_zoo/47534e27c9851bb1128ccc0102f1145e27f23f98/models/object_detection_yolox/object_detection_yolox_2022nov.onnx"
+    }
+  }
+}
+
