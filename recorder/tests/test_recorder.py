@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import stat
@@ -151,7 +152,13 @@ def test_pre_and_post_boundaries_and_deterministic_metadata(tmp_path: Path) -> N
         "start_sequence": 2,
     }
     assert metadata["clip"]["audio"] is False
+    assert metadata["clip"]["byte_size"] == published.clip_path.stat().st_size
+    assert (
+        metadata["clip"]["sha256"] == hashlib.sha256(published.clip_path.read_bytes()).hexdigest()
+    )
     assert metadata["privacy"] == {"audio": False, "display": False, "network": False}
+    assert stat.S_IMODE(published.clip_path.stat().st_mode) == 0o600
+    assert stat.S_IMODE(published.metadata_path.stat().st_mode) == 0o600
 
     second, _ = make_recorder(tmp_path / "second")
     second_published = None
@@ -517,6 +524,74 @@ def test_disk_retention_and_oversize_incident_are_enforced(tmp_path: Path) -> No
         oversize.process(clear, observation(clear))
     assert not list((tmp_path / "oversize" / "incidents").iterdir())
     assert not list((tmp_path / "oversize" / ".staging").iterdir())
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_error"),
+    [("same_size", "SHA-256 mismatch"), ("append", "byte_size mismatch")],
+)
+def test_restart_rejects_tampered_published_clip(
+    tmp_path: Path,
+    mutation: str,
+    expected_error: str,
+) -> None:
+    config = RecorderConfig(
+        pre_event_ms=0,
+        post_event_ms=0,
+        max_clip_ms=1_000,
+        max_buffer_frames=5,
+        nominal_fps=10,
+        max_incidents=5,
+        max_disk_bytes=100_000,
+    )
+    recorder, _ = make_recorder(tmp_path, config=config)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    clear = frame(1)
+    published = recorder.process(clear, observation(clear))
+    assert published is not None
+
+    original = published.clip_path.read_bytes()
+    if mutation == "same_size":
+        published.clip_path.write_bytes(bytes([original[0] ^ 1]) + original[1:])
+    else:
+        published.clip_path.write_bytes(original + b"x")
+
+    with pytest.raises(StorageError, match=expected_error):
+        IncidentStore(tmp_path, config)
+
+    assert published.directory.is_dir()
+    assert not list((tmp_path / ".staging").iterdir())
+
+
+def test_retention_fails_closed_before_deleting_tampered_incident(tmp_path: Path) -> None:
+    config = RecorderConfig(
+        pre_event_ms=0,
+        post_event_ms=0,
+        max_clip_ms=1_000,
+        max_buffer_frames=5,
+        nominal_fps=10,
+        max_incidents=1,
+        max_disk_bytes=100_000,
+    )
+    recorder, _ = make_recorder(tmp_path, config=config)
+    first_trigger = frame(0)
+    recorder.process(first_trigger, observation(first_trigger, cats=(("cat", 0.5),)))
+    first_clear = frame(1)
+    first = recorder.process(first_clear, observation(first_clear))
+    assert first is not None
+
+    original = first.clip_path.read_bytes()
+    first.clip_path.write_bytes(bytes([original[0] ^ 1]) + original[1:])
+    second_trigger = frame(2)
+    recorder.process(second_trigger, observation(second_trigger, cats=(("cat", 0.5),)))
+    second_clear = frame(3)
+    with pytest.raises(StorageError, match="SHA-256 mismatch"):
+        recorder.process(second_clear, observation(second_clear))
+
+    assert first.directory.is_dir()
+    assert [path.name for path in (tmp_path / "incidents").iterdir()] == [first.incident_id]
+    assert not list((tmp_path / ".staging").iterdir())
 
 
 def test_encoder_failure_leaves_no_partial_and_next_incident_can_recover(tmp_path: Path) -> None:

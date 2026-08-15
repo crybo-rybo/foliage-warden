@@ -153,9 +153,13 @@ The output root and its managed directories may not be symbolic links.
 Clip bytes and stable-key-order metadata are first written into a private
 staging directory. A directory rename publishes both together, so consumers do
 not see half an incident. Failed encodes and stale recorder staging directories
-are cleaned up. Files are mode `0600`. The explicit output root and managed
-directories are forced to mode `0700` during initialization; later group- or
-world-accessible mode changes are rejected before encoding or retention.
+are cleaned up. Metadata records the encoded clip's byte size and SHA-256;
+startup validation and retention stream the clip and fail closed on either
+mismatch before removing any managed incident. The digest detects accidental or
+local byte tampering but is not a signature or proof of origin. Files are mode
+`0600`. The explicit output root and managed directories are forced to mode
+`0700` during initialization; later group- or world-accessible mode changes are
+rejected before encoding or retention.
 
 The metadata intentionally stores only source identity, frame/timestamp
 boundaries, triggering track IDs/overlaps, encoding facts, and privacy flags.

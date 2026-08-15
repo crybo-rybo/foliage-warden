@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -20,6 +21,8 @@ from .types import RecorderConfig, RecorderFrame
 _INCIDENT_NAME = re.compile(r"incident-[0-9]{13}-[0-9]{10}\Z")
 _STAGING_NAME = re.compile(r"incident-[0-9]{13}-[0-9]{10}\.tmp-[A-Za-z0-9_-]+\Z")
 _SAFE_SUFFIX = re.compile(r"\.[a-z0-9]{1,10}\Z")
+_SHA256_HEX = re.compile(r"[0-9a-f]{64}\Z")
+_HASH_CHUNK_BYTES = 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +51,7 @@ class IncidentStore:
         self._ensure_private_directory(self.incidents_dir)
         self._ensure_private_directory(self.staging_dir)
         self._recover_staging()
+        self._published()
 
     def _verify_managed_directory(self, path: Path) -> None:
         if path.is_symlink() or not path.is_dir():
@@ -134,12 +138,16 @@ class IncidentStore:
             raise StorageError(f"managed-looking incident {path.name} has no safe metadata")
         try:
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-            clip = metadata["clip"]
-            clip_name = clip["filename"]
-        except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError) as error:
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
             raise StorageError(
                 f"managed-looking incident {path.name} has invalid metadata"
             ) from error
+        if not isinstance(metadata, dict) or not isinstance(metadata.get("clip"), dict):
+            raise StorageError(f"managed-looking incident {path.name} has invalid metadata")
+        clip = metadata["clip"]
+        clip_name = clip.get("filename")
+        expected_byte_size = clip.get("byte_size")
+        expected_sha256 = clip.get("sha256")
         if (
             metadata.get("record_type") != "observation_clip"
             or metadata.get("incident_id") != path.name
@@ -156,6 +164,40 @@ class IncidentStore:
             raise StorageError(f"managed-looking incident {path.name} has no safe clip")
         if {item.name for item in path.iterdir()} != {"metadata.json", clip_name}:
             raise StorageError(f"managed-looking incident {path.name} contains unexpected files")
+        if type(expected_byte_size) is not int or expected_byte_size <= 0:
+            raise StorageError(f"managed-looking incident {path.name} has invalid clip byte_size")
+        if not isinstance(expected_sha256, str) or not _SHA256_HEX.fullmatch(expected_sha256):
+            raise StorageError(f"managed-looking incident {path.name} has invalid clip SHA-256")
+        actual_byte_size, actual_sha256 = self._file_identity(
+            clip_path,
+            label=f"managed-looking incident {path.name} clip",
+        )
+        if actual_byte_size != expected_byte_size:
+            raise StorageError(f"managed-looking incident {path.name} clip byte_size mismatch")
+        if actual_sha256 != expected_sha256:
+            raise StorageError(f"managed-looking incident {path.name} clip SHA-256 mismatch")
+
+    @staticmethod
+    def _file_identity(path: Path, *, label: str) -> tuple[int, str]:
+        digest = hashlib.sha256()
+        byte_size = 0
+        descriptor: int | None = None
+        try:
+            descriptor = os.open(
+                path,
+                os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
+            )
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise StorageError(f"{label} is not a regular file")
+            while chunk := os.read(descriptor, _HASH_CHUNK_BYTES):
+                byte_size += len(chunk)
+                digest.update(chunk)
+        except OSError as error:
+            raise StorageError(f"could not read {label}: {error}") from error
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+        return byte_size, digest.hexdigest()
 
     @staticmethod
     def _tree_size(path: Path) -> int:
@@ -214,7 +256,7 @@ class IncidentStore:
             encoding = encoder.encode(frames, clip_path, fps=fps)
             if not clip_path.is_file() or clip_path.is_symlink():
                 raise StorageError("encoder did not produce a regular clip file")
-            clip_bytes = clip_path.stat().st_size
+            clip_bytes, clip_sha256 = self._file_identity(clip_path, label="encoded clip")
             if clip_bytes <= 0:
                 raise StorageError("encoder produced an empty clip")
             complete_metadata = {
@@ -228,6 +270,7 @@ class IncidentStore:
                     "fps": encoding.fps,
                     "frame_count": len(frames),
                     "height": encoding.height,
+                    "sha256": clip_sha256,
                     "width": encoding.width,
                 },
             }
