@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foliage-warden.local/shadow/behavior-prediction.schema.json",
+  "title": "Observe-only temporal behavior prediction",
+  "description": "One strict JSONL behavior record keyed to an exact perception observation, frame, and cat track. Sum, argmax, temporal ordering, and stream identity consistency are enforced by the parser in addition to this structural schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "sequence",
+    "mode",
+    "would_action",
+    "observation_id",
+    "frame_id",
+    "track_id",
+    "captured_at_ms",
+    "predicted_at_ms",
+    "model",
+    "config",
+    "predicted_label",
+    "probabilities"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "record_type": {"const": "behavior_prediction"},
+    "sequence": {"$ref": "#/$defs/non_negative_safe_integer"},
+    "mode": {"const": "OBSERVE_ONLY"},
+    "would_action": {"const": false},
+    "observation_id": {"$ref": "#/$defs/identifier"},
+    "frame_id": {"$ref": "#/$defs/identifier"},
+    "track_id": {"$ref": "#/$defs/identifier"},
+    "captured_at_ms": {"$ref": "#/$defs/non_negative_safe_integer"},
+    "predicted_at_ms": {"$ref": "#/$defs/non_negative_safe_integer"},
+    "model": {"$ref": "#/$defs/content_identity"},
+    "config": {"$ref": "#/$defs/content_identity"},
+    "predicted_label": {"$ref": "#/$defs/behavior_label"},
+    "probabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["PASSING", "SNIFFING", "EATING", "DIGGING", "OTHER", "UNKNOWN"],
+      "properties": {
+        "PASSING": {"$ref": "#/$defs/probability"},
+        "SNIFFING": {"$ref": "#/$defs/probability"},
+        "EATING": {"$ref": "#/$defs/probability"},
+        "DIGGING": {"$ref": "#/$defs/probability"},
+        "OTHER": {"$ref": "#/$defs/probability"},
+        "UNKNOWN": {"$ref": "#/$defs/probability"}
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "non_negative_safe_integer": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "probability": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "behavior_label": {
+      "type": "string",
+      "enum": ["PASSING", "SNIFFING", "EATING", "DIGGING", "OTHER", "UNKNOWN"]
+    },
+    "content_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha256"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foliage-warden-shadow"
+version = "0.1.0"
+description = "Deterministic observe-only perception/behavior/policy shadow integration"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "foliage-warden-eval",
+  "foliage-warden-simulator",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<10",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+foliage-warden-shadow = "foliage_warden_shadow.cli:main"
+
+[tool.uv.sources]
+foliage-warden-eval = { path = "../python", editable = true }
+foliage-warden-simulator = { path = "../simulator", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/foliage_warden_shadow"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schemas/behavior-prediction.schema.json" = "foliage_warden_shadow/schemas/behavior-prediction.schema.json"
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]
