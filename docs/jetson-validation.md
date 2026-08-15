@@ -30,6 +30,9 @@ TensorRT engines are target-version-specific. Keep ONNX as the portable model
 artifact and regenerate `.engine`/`.plan` files only after the deployed JetPack
 version is pinned.
 
+The first reproducible target-side engine build and synthetic inference results
+are recorded in [`jetson-benchmark.md`](jetson-benchmark.md).
+
 ## Boundary
 
 Permitted here: compilation, unit tests, prerecorded replay, mock action logs,
