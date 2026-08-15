@@ -19,8 +19,14 @@ sync-python:
     uv sync --project "{{python_dir}}" --extra dev
 
 test-python: sync-python
-    uv run --project "{{python_dir}}" pytest
+    cd "{{python_dir}}" && uv run pytest
 
-test: test-cpp test-python
+test-calibration:
+    node --test "{{project_root}}/tools/calibration/geometry.test.mjs"
+
+validate-contracts: sync-python
+    uv run --project "{{python_dir}}" python "{{project_root}}/tools/validate_contracts.py"
+
+test: test-cpp test-python test-calibration validate-contracts
 
 check: test

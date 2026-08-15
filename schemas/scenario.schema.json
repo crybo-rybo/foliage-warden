@@ -1,0 +1,340 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foliage-warden.local/schemas/scenario.schema.json",
+  "title": "Foliage Warden deterministic scripted scenario",
+  "description": "Version 1 virtual-time input and expectation contract for policy, safety, and mock-actuator replay.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "scenario_id",
+    "title",
+    "description",
+    "requirement_ids",
+    "tags",
+    "config_ref",
+    "initial_conditions",
+    "actuator_script",
+    "timeline",
+    "expectations"
+  ],
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "scenario_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 160},
+    "description": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "requirement_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "common.schema.json#/$defs/identifier"}
+    },
+    "tags": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "common.schema.json#/$defs/identifier"}
+    },
+    "config_ref": {"type": "string", "minLength": 1, "maxLength": 1024},
+    "initial_conditions": {"$ref": "#/$defs/initial_conditions"},
+    "actuator_script": {"$ref": "#/$defs/actuator_script"},
+    "timeline": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100000,
+      "items": {
+        "oneOf": [
+          {"$ref": "#/$defs/control_event"},
+          {"$ref": "#/$defs/observation_event"},
+          {"$ref": "#/$defs/observation_series_event"},
+          {"$ref": "#/$defs/camera_status_event"},
+          {"$ref": "#/$defs/actuator_status_event"},
+          {"$ref": "#/$defs/process_restart_event"},
+          {"$ref": "#/$defs/inject_action_event"},
+          {"$ref": "#/$defs/tick_event"}
+        ]
+      }
+    },
+    "expectations": {"$ref": "#/$defs/expectations"}
+  },
+  "$defs": {
+    "initial_conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clock_ms",
+        "policy_state",
+        "armed",
+        "camera_status",
+        "actuator_status",
+        "command_id_seed"
+      ],
+      "properties": {
+        "clock_ms": {"const": 0},
+        "policy_state": {"const": "DISARMED"},
+        "armed": {"const": false},
+        "camera_status": {"type": "string", "enum": ["CONNECTED", "DISCONNECTED", "ERROR"]},
+        "actuator_status": {"type": "string", "enum": ["READY", "NOT_READY", "FAULT"]},
+        "command_id_seed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "actuator_script": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_response", "ack_delay_ms", "deduplicate_command_ids", "overrides"],
+      "properties": {
+        "default_response": {
+          "type": "string",
+          "enum": ["ACK", "DENIED", "DROP", "TRANSPORT_ERROR"]
+        },
+        "ack_delay_ms": {"type": "integer", "minimum": 0, "maximum": 5000},
+        "deduplicate_command_ids": {"const": true},
+        "overrides": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/actuator_override"}
+        }
+      }
+    },
+    "actuator_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "occurrence", "response"],
+      "properties": {
+        "command": {"$ref": "common.schema.json#/$defs/action_command_name"},
+        "occurrence": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "response": {
+          "type": "string",
+          "enum": ["ACK", "DENIED", "DROP", "TRANSPORT_ERROR"]
+        },
+        "delay_ms": {"type": "integer", "minimum": 0, "maximum": 5000},
+        "reason": {"type": "string", "maxLength": 512}
+      }
+    },
+    "event_identity": {
+      "type": "object",
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000}
+      }
+    },
+    "control_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type", "operation"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "CONTROL"},
+        "operation": {"type": "string", "enum": ["ARM", "DISARM", "ESTOP"]}
+      }
+    },
+    "observation_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type", "observation"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "OBSERVATION"},
+        "observation": {"$ref": "common.schema.json#/$defs/policy_observation"}
+      }
+    },
+    "observation_series_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "at_ms",
+        "sequence",
+        "type",
+        "interval_ms",
+        "count",
+        "capture_offset_ms",
+        "id_prefix",
+        "template"
+      ],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "OBSERVATION_SERIES"},
+        "interval_ms": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "count": {"type": "integer", "minimum": 1, "maximum": 100000},
+        "capture_offset_ms": {"type": "integer", "minimum": -30000, "maximum": 0},
+        "id_prefix": {"$ref": "common.schema.json#/$defs/identifier"},
+        "template": {"$ref": "common.schema.json#/$defs/policy_observation_template"}
+      }
+    },
+    "camera_status_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type", "status"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "CAMERA_STATUS"},
+        "status": {"type": "string", "enum": ["CONNECTED", "DISCONNECTED", "ERROR"]},
+        "reason": {"type": "string", "maxLength": 512}
+      }
+    },
+    "actuator_status_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type", "status"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "ACTUATOR_STATUS"},
+        "status": {"type": "string", "enum": ["READY", "NOT_READY", "FAULT"]},
+        "reason": {"type": "string", "maxLength": 512}
+      }
+    },
+    "process_restart_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type", "restart_id"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "PROCESS_RESTART"},
+        "restart_id": {"$ref": "common.schema.json#/$defs/identifier"}
+      }
+    },
+    "inject_action_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type", "action"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "INJECT_ACTION"},
+        "action": {"$ref": "common.schema.json#/$defs/action_command"}
+      }
+    },
+    "tick_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "at_ms", "sequence", "type"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "sequence": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "type": {"const": "TICK"}
+      }
+    },
+    "expected_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ready_transitions": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "would_burst_decisions": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "burst_commands_issued": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "burst_commands_acked": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "physical_bursts": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "automatic_retries": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "duplicate_commands_suppressed": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "fault_transitions": {"type": "integer", "minimum": 0, "maximum": 100000}
+      }
+    },
+    "expected_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "result"],
+      "properties": {
+        "command_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "command": {"$ref": "common.schema.json#/$defs/action_command_name"},
+        "target": {"$ref": "common.schema.json#/$defs/identifier"},
+        "result": {
+          "type": "string",
+          "enum": ["ACK", "DENIED", "TIMEOUT", "DUPLICATE", "TRANSPORT_ERROR", "SUPPRESSED"]
+        }
+      }
+    },
+    "invariant": {
+      "type": "string",
+      "enum": [
+        "STARTS_DISARMED",
+        "NO_PHYSICAL_EFFECTS",
+        "RESTART_REQUIRES_REARM",
+        "PERSON_BLOCKS_ACTION",
+        "MULTIPLE_CATS_BLOCK_ACTION",
+        "STALE_FRAMES_BLOCK_ACTION",
+        "POOR_TRACK_BLOCKS_ACTION",
+        "NO_FIRE_BLOCKS_ACTION",
+        "HARDWARE_NOT_READY_BLOCKS_ACTION",
+        "ONE_BURST_PER_INCIDENT",
+        "BURST_NOT_RETRIED",
+        "COMMAND_IDS_DEDUPLICATED",
+        "ACTIONS_AUDITED",
+        "DETERMINISTIC_REPLAY"
+      ]
+    },
+    "expectations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "explanation",
+        "final_state",
+        "exact_counts",
+        "required_states",
+        "forbidden_states",
+        "required_reason_codes",
+        "forbidden_commands",
+        "expected_action_sequence",
+        "invariants"
+      ],
+      "properties": {
+        "explanation": {"type": "string", "minLength": 1, "maxLength": 2000},
+        "final_state": {"$ref": "common.schema.json#/$defs/policy_state"},
+        "exact_counts": {"$ref": "#/$defs/expected_counts"},
+        "required_states": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/policy_state"}
+        },
+        "forbidden_states": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/policy_state"}
+        },
+        "required_reason_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+        },
+        "forbidden_commands": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/action_command_name"}
+        },
+        "expected_action_sequence": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {"$ref": "#/$defs/expected_action"}
+        },
+        "invariants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/invariant"}
+        }
+      }
+    }
+  }
+}

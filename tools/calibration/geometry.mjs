@@ -37,13 +37,10 @@ export function validatePolygon(points) {
   if (polygonArea(points) < 0.0001) throw new Error("polygon area is too small");
 }
 
-export function buildScene({ image, zones, aimPresets }) {
+export function buildScene({ calibrationId, zones, aimPresets }) {
   return {
-    image: {
-      name: image.name,
-      width: image.width,
-      height: image.height,
-    },
+    calibration_id: calibrationId,
+    coordinate_space: "NORMALIZED_IMAGE",
     zones: zones.map((zone) => ({
       id: zone.id,
       type: zone.type,
@@ -57,4 +54,3 @@ export function buildScene({ image, zones, aimPresets }) {
     })),
   };
 }
-

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "scenario_id": "clear-pass-v1",
+  "title": "Cat passes through the approach zone",
+  "description": "A mature, high-quality cat track crosses the protected approach region with PASSING/CLEAR behavior. Presence alone must never authorize an action.",
+  "requirement_ids": ["REQ-PRESENCE-NOT-SUFFICIENT", "REQ-ONE-FRAME-NOT-SUFFICIENT"],
+  "tags": ["baseline", "clear", "hard-negative"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 1000
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": []
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "passing-series",
+      "at_ms": 100,
+      "sequence": 0,
+      "type": "OBSERVATION_SERIES",
+      "interval_ms": 300,
+      "count": 5,
+      "capture_offset_ms": 0,
+      "id_prefix": "passing",
+      "template": {
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.97,
+            "track_quality": 0.94,
+            "initial_track_age_ms": 600,
+            "ambiguous": false,
+            "bbox": {"x": 0.25, "y": 0.45, "width": 0.3, "height": 0.38},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "CLEAR",
+              "raw_label": "PASSING",
+              "scores": {"CLEAR": 0.94, "EATING": 0.02, "DIGGING": 0.01, "UNKNOWN": 0.03},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.72,
+              "foliage_overlap": 0.04,
+              "soil_overlap": 0.02,
+              "motion_score": 0.31
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": false
+          }
+        ]
+      }
+    }
+  ],
+  "expectations": {
+    "explanation": "The policy may track the cat, but CLEAR evidence prevents confirmation and all action commands.",
+    "final_state": "MONITORING",
+    "exact_counts": {
+      "ready_transitions": 0,
+      "would_burst_decisions": 0,
+      "burst_commands_issued": 0,
+      "burst_commands_acked": 0,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 0,
+      "fault_transitions": 0
+    },
+    "required_states": ["MONITORING", "TRACKING"],
+    "forbidden_states": ["READY", "BURST"],
+    "required_reason_codes": ["BEHAVIOR_CLEAR"],
+    "forbidden_commands": ["GOTO_PRESET", "BURST"],
+    "expected_action_sequence": [],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}

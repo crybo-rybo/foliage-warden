@@ -12,7 +12,7 @@ authors = [{ name = "Foliage Warden contributors" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["jsonschema>=4.23", "pytest>=8.0"]
 
 [project.scripts]
 foliage-warden-eval = "foliage_warden_eval.cli:main"
@@ -23,4 +23,5 @@ packages = ["src/foliage_warden_eval"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
+pythonpath = [".."]
 testpaths = ["tests"]

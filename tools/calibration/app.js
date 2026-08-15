@@ -7,6 +7,7 @@ import {
 } from "./geometry.mjs";
 
 const elements = {
+  calibrationId: document.querySelector("#calibration-id"),
   canvas: document.querySelector("#scene"),
   copy: document.querySelector("#copy"),
   configInput: document.querySelector("#config-input"),
@@ -105,8 +106,9 @@ function draw() {
 }
 
 function exportDocument() {
+  const calibrationId = elements.calibrationId.value.trim();
   const scene = buildScene({
-    image: state.imageMetadata,
+    calibrationId,
     zones: state.zones,
     aimPresets: state.aimPresets,
   });
@@ -121,7 +123,9 @@ function render() {
   elements.zoneLinkRow.hidden = !isAim;
   elements.hardwareTargetRow.hidden = !isAim;
   elements.zoneLink.replaceChildren(
-    ...state.zones.map((zone) => new Option(`${zone.id} (${zone.type})`, zone.id)),
+    ...state.zones
+      .filter((zone) => zone.type === "approach")
+      .map((zone) => new Option(`${zone.id} (${zone.type})`, zone.id)),
   );
   elements.shapeList.replaceChildren(
     ...[...state.zones, ...state.aimPresets].map((shape) => {
@@ -196,6 +200,7 @@ elements.shapeType.addEventListener("change", () => {
   state.currentPoints = [];
   render();
 });
+elements.calibrationId.addEventListener("input", render);
 
 elements.imageInput.addEventListener("change", () => {
   const [file] = elements.imageInput.files;
@@ -222,6 +227,7 @@ elements.configInput.addEventListener("change", async () => {
     state.baseConfig = parsed.scene ? parsed : { schema_version: parsed.schema_version ?? 1 };
     state.zones = structuredClone(scene.zones ?? []);
     state.aimPresets = structuredClone(scene.aim_presets ?? []);
+    elements.calibrationId.value = scene.calibration_id ?? "living_room_v1";
     state.currentPoints = [];
     setStatus(`Imported ${state.zones.length} zones and ${state.aimPresets.length} aim presets.`);
     render();

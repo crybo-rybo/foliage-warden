@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "config_id": "simulation-safe-v1",
+  "clock": {
+    "source": "VIRTUAL",
+    "tick_ms": 50
+  },
+  "runtime": {
+    "mode": "SIMULATION",
+    "startup_state": "DISARMED",
+    "manual_arm_required": true,
+    "restart_requires_rearm": true
+  },
+  "camera": {
+    "camera_id": "camera-1",
+    "source": "SCRIPTED",
+    "width": 1280,
+    "height": 720,
+    "fps": 30.0,
+    "max_frame_age_ms": 250,
+    "disconnect_fault_after_ms": 1000
+  },
+  "perception": {
+    "detection": {
+      "cat_min_confidence": 0.6,
+      "person_min_confidence": 0.5
+    },
+    "tracking": {
+      "min_track_age_ms": 500,
+      "min_track_quality": 0.8,
+      "max_track_gap_ms": 500
+    },
+    "behavior": {
+      "eating_min_probability": 0.85,
+      "digging_min_probability": 0.85,
+      "unknown_max_probability": 0.2,
+      "eating_min_foliage_overlap": 0.35,
+      "digging_min_soil_overlap": 0.25,
+      "digging_min_motion_score": 0.5
+    }
+  },
+  "policy": {
+    "confirmation_window_ms": 2000,
+    "harmful_persistence_ms": 1200,
+    "min_supporting_observations": 4,
+    "incident_clear_ms": 1000,
+    "cooldown_ms": 30000,
+    "max_actions_per_incident": 1,
+    "block_on_person": true,
+    "block_on_multiple_cats": true,
+    "block_on_ambiguous_track": true,
+    "hardware_ready_required": true,
+    "safe_preset_required": true,
+    "no_fire_clear_required": true
+  },
+  "scene": {
+    "calibration_id": "example-camera-1-v1",
+    "coordinate_space": "NORMALIZED_IMAGE",
+    "zones": [
+      {
+        "id": "pot-1-approach",
+        "type": "approach",
+        "plant_id": "pot-1",
+        "description": "Example protected approach region; replace after camera calibration.",
+        "points": [
+          {"x": 0.25, "y": 0.2},
+          {"x": 0.78, "y": 0.2},
+          {"x": 0.82, "y": 0.92},
+          {"x": 0.2, "y": 0.92}
+        ]
+      },
+      {
+        "id": "pot-1-foliage",
+        "type": "foliage",
+        "plant_id": "pot-1",
+        "points": [
+          {"x": 0.42, "y": 0.22},
+          {"x": 0.65, "y": 0.2},
+          {"x": 0.7, "y": 0.58},
+          {"x": 0.38, "y": 0.58}
+        ]
+      },
+      {
+        "id": "pot-1-soil",
+        "type": "soil",
+        "plant_id": "pot-1",
+        "points": [
+          {"x": 0.4, "y": 0.58},
+          {"x": 0.69, "y": 0.58},
+          {"x": 0.65, "y": 0.7},
+          {"x": 0.43, "y": 0.7}
+        ]
+      },
+      {
+        "id": "example-human-walkway",
+        "type": "no_fire",
+        "description": "Illustrative only; calibrate all occupied paths before any hardware pilot.",
+        "points": [
+          {"x": 0.0, "y": 0.7},
+          {"x": 0.22, "y": 0.7},
+          {"x": 0.22, "y": 1.0},
+          {"x": 0.0, "y": 1.0}
+        ]
+      }
+    ],
+    "aim_presets": [
+      {
+        "id": "pot-1-safe-nearby",
+        "zone_id": "pot-1-approach",
+        "point": {"x": 0.75, "y": 0.78},
+        "hardware_target": "UNVALIDATED_EXAMPLE_DO_NOT_DEPLOY",
+        "description": "A simulation-only point near the pot, never a target on an animal."
+      }
+    ]
+  },
+  "actuator": {
+    "enabled": true,
+    "backend": "MOCK",
+    "allow_physical_effects": false,
+    "ack_timeout_ms": 250,
+    "watchdog_timeout_ms": 1000,
+    "deduplicate_command_ids": true,
+    "automatic_retry_burst": false,
+    "burst": {
+      "enabled": true,
+      "duration_ms": 75,
+      "hardware_max_duration_ms": 100
+    }
+  },
+  "audit": {
+    "enabled": true,
+    "format": "JSONL",
+    "flush_each_action": true,
+    "include_evidence": true,
+    "config_hash_algorithm": "SHA-256"
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foliage-warden.local/schemas/event-record.schema.json",
+  "title": "Foliage Warden append-only event record",
+  "description": "One JSONL record from a replay or runtime event stream. Ordering uses sequence and monotonic_ms, never wall time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "sequence",
+    "run_id",
+    "monotonic_ms",
+    "config_id",
+    "config_sha256",
+    "source",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "record_type": {
+      "type": "string",
+      "enum": [
+        "RUN_STARTED",
+        "RUN_STOPPED",
+        "INPUT_ACCEPTED",
+        "INPUT_REJECTED",
+        "STATE_TRANSITION",
+        "HEALTH_CHANGED",
+        "FAULT_RAISED",
+        "FAULT_CLEARED",
+        "ACTION_AUDIT_REF"
+      ]
+    },
+    "sequence": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "run_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "monotonic_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+    "wall_time": {"type": "string", "format": "date-time"},
+    "config_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "config_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+    "scenario_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "source": {
+      "type": "string",
+      "enum": ["RUNTIME", "CAMERA", "PERCEPTION", "POLICY", "ACTUATOR", "REPLAY"]
+    },
+    "payload": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"record_type": {"enum": ["RUN_STARTED", "RUN_STOPPED"]}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/run_payload"}}}
+    },
+    {
+      "if": {"properties": {"record_type": {"enum": ["INPUT_ACCEPTED", "INPUT_REJECTED"]}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/input_payload"}}}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "STATE_TRANSITION"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/state_payload"}}}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "HEALTH_CHANGED"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/health_payload"}}}
+    },
+    {
+      "if": {"properties": {"record_type": {"enum": ["FAULT_RAISED", "FAULT_CLEARED"]}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/fault_payload"}}}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "ACTION_AUDIT_REF"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/action_ref_payload"}}}
+    }
+  ],
+  "$defs": {
+    "run_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason_codes"],
+      "properties": {
+        "reason_codes": {
+          "type": "array",
+          "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+        },
+        "summary": {"type": "string", "maxLength": 1024}
+      }
+    },
+    "input_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "input_type", "reason_codes"],
+      "properties": {
+        "event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "input_type": {
+          "type": "string",
+          "enum": [
+            "CONTROL",
+            "OBSERVATION",
+            "CAMERA_STATUS",
+            "ACTUATOR_STATUS",
+            "PROCESS_RESTART",
+            "INJECT_ACTION",
+            "TICK"
+          ]
+        },
+        "observation_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "reason_codes": {
+          "type": "array",
+          "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+        }
+      }
+    },
+    "state_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "trigger_event_id", "reason_codes"],
+      "properties": {
+        "from": {"$ref": "common.schema.json#/$defs/policy_state"},
+        "to": {"$ref": "common.schema.json#/$defs/policy_state"},
+        "trigger_event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "incident_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "reason_codes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+        }
+      }
+    },
+    "health_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "from", "to", "reason_codes"],
+      "properties": {
+        "component": {"type": "string", "enum": ["CAMERA", "PERCEPTION", "ACTUATOR", "WATCHDOG"]},
+        "from": {"type": "string", "enum": ["UNKNOWN", "READY", "NOT_READY", "FAULT", "CONNECTED", "DISCONNECTED"]},
+        "to": {"type": "string", "enum": ["UNKNOWN", "READY", "NOT_READY", "FAULT", "CONNECTED", "DISCONNECTED"]},
+        "reason_codes": {
+          "type": "array",
+          "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+        }
+      }
+    },
+    "fault_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fault_id", "reason_codes", "latched"],
+      "properties": {
+        "fault_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "reason_codes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+        },
+        "latched": {"type": "boolean"},
+        "detail": {"type": "string", "maxLength": 2048}
+      }
+    },
+    "action_ref_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audit_id"],
+      "properties": {
+        "audit_id": {"$ref": "common.schema.json#/$defs/identifier"}
+      }
+    }
+  }
+}

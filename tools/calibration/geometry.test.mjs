@@ -34,8 +34,18 @@ test("degenerate polygons and duplicate IDs are rejected", () => {
 
 test("scene export uses normalized canonical fields", () => {
   const scene = buildScene({
-    image: { name: "room.jpg", width: 1280, height: 720 },
-    zones: [{ id: "pot_1", type: "soil", points: [{ x: 0.2, y: 0.3 }] }],
+    calibrationId: "living_room_v1",
+    zones: [
+      {
+        id: "pot_1",
+        type: "approach",
+        points: [
+          { x: 0.2, y: 0.3 },
+          { x: 0.4, y: 0.3 },
+          { x: 0.3, y: 0.5 },
+        ],
+      },
+    ],
     aimPresets: [
       {
         id: "pot_1_front",
@@ -45,8 +55,8 @@ test("scene export uses normalized canonical fields", () => {
       },
     ],
   });
-  assert.equal(scene.image.width, 1280);
+  assert.equal(scene.calibration_id, "living_room_v1");
+  assert.equal(scene.coordinate_space, "NORMALIZED_IMAGE");
   assert.equal(scene.zones[0].points[0].x, 0.2);
   assert.equal(scene.aim_presets[0].hardware_target, "disabled");
 });
-
