@@ -110,11 +110,17 @@ DecisionOutput drive_to_aiming(PolicyEngine& policy, FrameId first_frame = 1,
     return output;
 }
 
-DecisionOutput drive_to_burst(PolicyEngine& policy, FrameId first_frame = 1,
+DecisionOutput drive_to_ready(PolicyEngine& policy, FrameId first_frame = 1,
                               TimestampMs first_time = 10) {
     (void)drive_to_aiming(policy, first_frame, first_time);
     auto output = frame(policy, harmful_frame(first_frame + 4, first_time + 50));
     REQUIRE(policy.state() == PolicyState::Ready);
+    return output;
+}
+
+DecisionOutput drive_to_burst(PolicyEngine& policy, FrameId first_frame = 1,
+                              TimestampMs first_time = 10) {
+    auto output = drive_to_ready(policy, first_frame, first_time);
     output = frame(policy, harmful_frame(first_frame + 5, first_time + 60));
     return output;
 }
@@ -284,6 +290,67 @@ void all_required_perception_interlocks_fail_closed() {
         const auto output = frame(policy, std::move(input));
         REQUIRE(has_interlock(output, expected));
         REQUIRE(output.state_after == PolicyState::Monitoring);
+        REQUIRE(actuator.count(ActionType::Burst) == 0);
+    }
+}
+
+void every_perception_gate_is_rechecked_immediately_before_burst() {
+    using Mutation = std::function<void(PerceptionInput&)>;
+    const std::vector<Mutation> cases{
+        [](PerceptionInput& input) { input.person_present = true; },
+        [](PerceptionInput& input) { input.cats_in_protected_zone = 2; },
+        [](PerceptionInput& input) { input.cats_ambiguous = true; },
+        [](PerceptionInput& input) { input.primary_track_id.reset(); },
+        [](PerceptionInput& input) { input.cats_in_protected_zone = 0; },
+        [](PerceptionInput& input) { input.track_quality = 0.1; },
+        [](PerceptionInput& input) { input.behavior = Behavior::Unknown; },
+        [](PerceptionInput& input) { input.behavior = Behavior::Clear; },
+        [](PerceptionInput& input) { input.behavior_confidence = 0.1; },
+        [](PerceptionInput& input) { input.region_evidence = 0.1; },
+        [](PerceptionInput& input) { input.no_fire_intersection = true; },
+        [](PerceptionInput& input) { input.safe_aim_preset.reset(); },
+    };
+
+    for (const auto& mutate : cases) {
+        MockActuator actuator;
+        PolicyEngine policy(fast_config(), actuator);
+        (void)arm(policy);
+        (void)drive_to_ready(policy);
+
+        auto unsafe = harmful_frame(6, 70);
+        mutate(unsafe);
+        const auto output = frame(policy, std::move(unsafe));
+        REQUIRE(output.state_after != PolicyState::Burst);
+        REQUIRE(output.decision != DecisionCode::BurstAttempted);
+        REQUIRE(actuator.count(ActionType::Burst) == 0);
+    }
+}
+
+void every_hardware_gate_is_rechecked_immediately_before_burst() {
+    using Mutation = std::function<void(SafetyInput&)>;
+    const std::vector<Mutation> cases{
+        [](SafetyInput& input) { input.hardware_ready = false; },
+        [](SafetyInput& input) { input.watchdog_healthy = false; },
+        [](SafetyInput& input) { input.calibration_valid = false; },
+        [](SafetyInput& input) { input.emergency_stop = true; },
+        [](SafetyInput& input) { input.actuator_fault = true; },
+    };
+
+    for (const auto& mutate : cases) {
+        MockActuator actuator;
+        PolicyEngine policy(fast_config(), actuator);
+        (void)arm(policy);
+        (void)drive_to_ready(policy);
+
+        auto safety = safe_at(70);
+        mutate(safety);
+        const auto output = policy.step(PolicyInput{
+            .now_ms = 70,
+            .perception = harmful_frame(6, 70),
+            .safety = safety,
+        });
+        REQUIRE(output.state_after == PolicyState::Fault);
+        REQUIRE(output.decision == DecisionCode::Faulted);
         REQUIRE(actuator.count(ActionType::Burst) == 0);
     }
 }
@@ -529,6 +596,10 @@ int main() {
         {"transient_interlock_aborts_aim_with_hold", transient_interlock_aborts_aim_with_hold},
         {"all_required_perception_interlocks_fail_closed",
          all_required_perception_interlocks_fail_closed},
+        {"every_perception_gate_is_rechecked_immediately_before_burst",
+         every_perception_gate_is_rechecked_immediately_before_burst},
+        {"every_hardware_gate_is_rechecked_immediately_before_burst",
+         every_hardware_gate_is_rechecked_immediately_before_burst},
         {"stale_and_duplicate_frames_cannot_confirm", stale_and_duplicate_frames_cannot_confirm},
         {"hardware_not_ready_latches_fault_and_estop",
          hardware_not_ready_latches_fault_and_estop},
