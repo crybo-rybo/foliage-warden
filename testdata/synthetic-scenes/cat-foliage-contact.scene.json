@@ -1,0 +1,10 @@
+{
+  "scene": {
+    "zones": [
+      {"id": "fixture-approach", "type": "approach", "plant_id": "fixture-pot", "points": [{"x": 0.25, "y": 0.25}, {"x": 0.98, "y": 0.25}, {"x": 0.98, "y": 0.93}, {"x": 0.25, "y": 0.93}]},
+      {"id": "fixture-foliage", "type": "foliage", "plant_id": "fixture-pot", "points": [{"x": 0.53, "y": 0.08}, {"x": 0.96, "y": 0.08}, {"x": 0.96, "y": 0.66}, {"x": 0.53, "y": 0.66}]},
+      {"id": "fixture-soil", "type": "soil", "plant_id": "fixture-pot", "points": [{"x": 0.60, "y": 0.54}, {"x": 0.84, "y": 0.54}, {"x": 0.84, "y": 0.83}, {"x": 0.60, "y": 0.83}]},
+      {"id": "fixture-no-fire", "type": "no_fire", "points": [{"x": 0.00, "y": 0.00}, {"x": 0.23, "y": 0.00}, {"x": 0.23, "y": 1.00}, {"x": 0.00, "y": 1.00}]}
+    ]
+  }
+}

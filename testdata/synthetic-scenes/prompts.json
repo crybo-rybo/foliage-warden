@@ -1,0 +1,10 @@
+{
+  "generator": "OpenAI built-in image generation",
+  "generated_on": "2026-08-14",
+  "prompts": {
+    "cat-foliage-contact": "Photorealistic ordinary apartment living room from a fixed high corner security-camera viewpoint, wide 16:9 composition, one large leafy potted houseplant on the floor, natural daylight, realistic clutter but clear visibility. Exactly one domestic short-haired cat beside the plant with its head visibly touching and partly inside the leaves as if investigating or chewing. Full cat, full pot, and surrounding floor visible; cat and plant large enough for object detection. No people, other animals, text, watermark, collage, or split panels.",
+    "cat-soil-contact": "Photorealistic ordinary apartment living room from a fixed high corner security-camera viewpoint, wide 16:9 composition, one wide pot filled with clearly visible clean soil and cat-safe grass, natural daylight. Exactly one domestic short-haired cat at the pot with one front paw visibly reaching into and disturbing the soil in a digging-like pose. Full cat, full pot, paw, soil, and surrounding floor visible; no people, other animals, text, watermark, collage, or split panels.",
+    "person-and-cat": "Photorealistic ordinary apartment living room from a fixed high corner security-camera viewpoint, wide 16:9 composition, leafy potted houseplant on the floor, natural daylight. Exactly one adult person clearly visible watering the plant while exactly one domestic short-haired cat stands nearby. Full person, cat, pot, and surrounding floor visible with minimal occlusion; no other people or animals, text, watermark, collage, or split panels.",
+    "empty-leaf-motion": "Photorealistic empty apartment living room from a fixed high corner security-camera viewpoint, wide 16:9 composition, one large leafy potted houseplant on the floor with a few leaves visibly displaced by a small fan. Full pot and surrounding floor visible. Strictly no people or animals, text, watermark, collage, or split panels."
+  }
+}

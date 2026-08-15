@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "provenance": "AI-generated integration fixtures; not real-world evaluation data",
+  "scenes": [
+    {
+      "id": "cat-foliage-contact",
+      "image": "cat-foliage-contact.png",
+      "zones": "cat-foliage-contact.scene.json",
+      "sha256": "bbebefb40013d7f6161c352d1c3f4a3c2c45d6a727add3af15136b97c73114d8",
+      "expected_objects": {"cat_min": 1, "cat_max": 1, "person_min": 0, "person_max": 0},
+      "behavior_hint": "foliage contact; not behavioral ground truth"
+    },
+    {
+      "id": "cat-soil-contact",
+      "image": "cat-soil-contact.png",
+      "zones": "cat-soil-contact.scene.json",
+      "sha256": "fed72737647e1dc2e86598cc618d69bb0f7c58d849c4d056218cc0c84af2c0a2",
+      "expected_objects": {"cat_min": 1, "cat_max": 1, "person_min": 0, "person_max": 0},
+      "behavior_hint": "soil contact; not behavioral ground truth"
+    },
+    {
+      "id": "person-and-cat",
+      "image": "person-and-cat.png",
+      "zones": "person-and-cat.scene.json",
+      "sha256": "0df5c652e5518e50d25d67c4a47efa389e3f5a3dc762b74245454aeb42c1fff8",
+      "expected_objects": {"cat_min": 1, "cat_max": 1, "person_min": 1, "person_max": 1},
+      "behavior_hint": "global person interlock fixture"
+    },
+    {
+      "id": "empty-leaf-motion",
+      "image": "empty-leaf-motion.png",
+      "zones": "empty-leaf-motion.scene.json",
+      "sha256": "510c64851f39f90a28875cd12df079b2d17f48039bbb313e798565c8e80c84a0",
+      "expected_objects": {"cat_min": 0, "cat_max": 0, "person_min": 0, "person_max": 0},
+      "behavior_hint": "empty-room hard negative"
+    }
+  ]
+}
