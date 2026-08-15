@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Foliage Warden · Observe-only review</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="eyebrow">LOCAL REVIEW WORKBENCH</p>
+        <h1>Ground-truth annotations</h1>
+      </div>
+      <div class="safety-badge"><span aria-hidden="true"></span>Observe only · loopback</div>
+    </header>
+
+    <main>
+      <section class="workspace" aria-labelledby="media-heading">
+        <div class="section-heading">
+          <div>
+            <p class="step">01 · Inspect</p>
+            <h2 id="media-heading">Manifest media</h2>
+          </div>
+          <label class="media-picker">Clip
+            <select id="media-select" aria-label="Manifest clip"></select>
+          </label>
+        </div>
+        <div id="media-shell" class="media-shell">
+          <p id="media-placeholder">Loading local manifest…</p>
+        </div>
+        <div class="transport">
+          <output id="current-time">0 ms</output>
+          <button id="mark-start" type="button">Set start</button>
+          <button id="mark-end" type="button">Set end</button>
+          <span id="media-context"></span>
+        </div>
+      </section>
+
+      <section class="editor" aria-labelledby="label-heading">
+        <div class="section-heading">
+          <div>
+            <p class="step">02 · Label</p>
+            <h2 id="label-heading">Observable event</h2>
+          </div>
+          <button id="new-annotation" class="quiet" type="button">Clear form</button>
+        </div>
+
+        <form id="annotation-form">
+          <div class="behavior-grid" role="group" aria-label="Behavior label">
+            <label><input type="radio" name="behavior" value="PASSING" checked><span>Passing</span></label>
+            <label><input type="radio" name="behavior" value="SNIFFING"><span>Sniffing</span></label>
+            <label><input type="radio" name="behavior" value="EATING"><span>Eating</span></label>
+            <label><input type="radio" name="behavior" value="DIGGING"><span>Digging</span></label>
+            <label><input type="radio" name="behavior" value="OTHER"><span>Other</span></label>
+            <label><input type="radio" name="behavior" value="UNKNOWN"><span>Unknown</span></label>
+          </div>
+
+          <div class="field-row three">
+            <label>Start (ms)<input id="start-ms" name="start_ms" type="number" min="0" step="1" required></label>
+            <label>End (ms)<input id="end-ms" name="end_ms" type="number" min="1" step="1" required></label>
+            <label>Zone ID<input id="zone-id" name="zone_id" autocomplete="off" placeholder="pot-1-approach"></label>
+          </div>
+
+          <label>Rationale
+            <textarea id="rationale" name="rationale" maxlength="2000" required
+              placeholder="Describe only the visible evidence and any uncertainty."></textarea>
+          </label>
+
+          <div class="flag-grid">
+            <label><input id="staged-safe" name="staged_safe" type="checkbox"><span><strong>Staged safely</strong>Known safe plant/substrate and supervised setup</span></label>
+            <label><input id="person-present" name="person_present" type="checkbox"><span><strong>Person present</strong>A person is visible or audible in the media</span></label>
+            <label><input id="privacy-restricted" name="privacy_restricted" type="checkbox"><span><strong>Privacy restricted</strong>Keep access and retention restricted</span></label>
+          </div>
+
+          <label>Event ID<input id="event-id" name="event_id" autocomplete="off" required></label>
+          <div id="form-error" class="message error" role="alert" hidden></div>
+          <div class="form-actions">
+            <button class="primary" type="submit">Save annotation</button>
+            <span id="save-status" class="message" role="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="annotations" aria-labelledby="review-heading">
+        <div class="section-heading">
+          <div>
+            <p class="step">03 · Verify</p>
+            <h2 id="review-heading">Current annotations <span id="annotation-count">0</span></h2>
+          </div>
+          <a class="export" href="/api/export" download="ground-truth.jsonl">Export deterministic JSONL</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Event</th><th>Label</th><th>Interval</th><th>Flags</th><th></th></tr></thead>
+            <tbody id="annotation-rows"></tbody>
+          </table>
+        </div>
+        <p class="footnote">Editing and archiving retain the prior value in the local revision history. Exports include current labels only.</p>
+      </section>
+    </main>
+
+    <footer>No inference · No uploads · No actuator or command path</footer>
+    <script src="/core.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
