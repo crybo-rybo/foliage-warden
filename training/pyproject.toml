@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foliage-warden-training"
+version = "0.1.0"
+description = "Off-device temporal behavior training and evaluation for Foliage Warden"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "onnx>=1.16",
+  "onnxruntime>=1.18,<1.24",
+  "opencv-python-headless>=4.10",
+  # PyTorch CUDA 13 wheels dropped Pascal, including the available GTX 1080 dev GPU.
+  "torch>=2.3,<2.8",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+fw-behavior-generate-synthetic = "foliage_warden_training.synthetic:main"
+fw-behavior-train = "foliage_warden_training.train:main"
+fw-behavior-evaluate = "foliage_warden_training.evaluate:main"
+fw-behavior-export = "foliage_warden_training.export:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/foliage_warden_training"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
