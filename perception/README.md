@@ -81,6 +81,11 @@ derived from frame index and nominal FPS. Camera time is also a nominal
 observe-only timeline; it is not a safety clock and must not be used to enable
 physical effects.
 
+`--camera-id` accepts a canonical ASCII identifier beginning with a letter or
+digit and containing only letters, digits, `.`, `_`, `:`, or `-`. It is capped
+at 99 characters so the derived observation and frame IDs remain within the
+shared 128-character contract even at the maximum interoperable frame index.
+
 Calibration input may be the browser tool's export, a standalone `scene`
 object, or the full runtime configuration:
 

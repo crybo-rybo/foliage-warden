@@ -20,7 +20,7 @@ from .registry import (
     load_model_spec,
     resolve_and_verify_model,
 )
-from .sources import CameraSource, FrameSource, ImageSource, VideoSource
+from .sources import CameraSource, FrameSource, ImageSource, VideoSource, validate_camera_id
 from .tracking import IouTracker
 from .yolox import YOLOXDetector
 
@@ -50,6 +50,13 @@ def _device(value: str) -> int | str:
     return int(value) if re.fullmatch(r"-?\d+", value) else value
 
 
+def _camera_id(value: str) -> str:
+    try:
+        return validate_camera_id(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(str(error)) from error
+
+
 def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--registry",
@@ -67,7 +74,7 @@ def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
         type=Path,
         help="calibration export, scene JSON, or runtime config containing normalized zones",
     )
-    parser.add_argument("--camera-id", default="camera-1")
+    parser.add_argument("--camera-id", type=_camera_id, default="camera-1")
     parser.add_argument("--cat-confidence", type=_probability, default=0.5)
     parser.add_argument("--person-confidence", type=_probability, default=0.5)
     parser.add_argument("--nms-iou", type=_probability, default=0.5)

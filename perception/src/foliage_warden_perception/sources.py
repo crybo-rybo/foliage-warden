@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +14,23 @@ import numpy.typing as npt
 
 from .dependencies import require_cv2
 from .errors import SourceError
+
+MAX_SAFE_INTEGER = 9_007_199_254_740_991
+# Observation IDs append ":observation:" plus the decimal frame index. Keeping
+# the camera portion at 99 characters guarantees the shared 128-character
+# identifier bound even at MAX_SAFE_INTEGER.
+MAX_CAMERA_ID_LENGTH = 99
+_CAMERA_ID = re.compile(rf"[A-Za-z0-9][A-Za-z0-9._:-]{{0,{MAX_CAMERA_ID_LENGTH - 1}}}\Z")
+
+
+def validate_camera_id(value: str) -> str:
+    """Validate the producer ID before opening a source or deriving frame IDs."""
+
+    if not isinstance(value, str) or _CAMERA_ID.fullmatch(value) is None:
+        raise ValueError(
+            f"camera_id must be a canonical identifier of at most {MAX_CAMERA_ID_LENGTH} characters"
+        )
+    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,10 +43,14 @@ class Frame:
     bgr: npt.NDArray[np.uint8]
 
     def __post_init__(self) -> None:
-        if self.index < 0 or self.captured_at_ms < 0:
-            raise ValueError("frame index and captured_at_ms must be non-negative")
-        if not self.camera_id:
-            raise ValueError("camera_id must not be empty")
+        if (
+            type(self.index) is not int
+            or not 0 <= self.index <= MAX_SAFE_INTEGER
+            or type(self.captured_at_ms) is not int
+            or not 0 <= self.captured_at_ms <= MAX_SAFE_INTEGER
+        ):
+            raise ValueError("frame index and captured_at_ms must be non-negative safe integers")
+        validate_camera_id(self.camera_id)
         if self.bgr.ndim != 3 or self.bgr.shape[2] != 3:
             raise ValueError("frame pixels must be an HxWx3 BGR array")
 
@@ -48,7 +70,7 @@ class ImageSource:
         cv2_module: Any | None = None,
     ) -> None:
         self.path = Path(path)
-        self.camera_id = camera_id
+        self.camera_id = validate_camera_id(camera_id)
         self._cv2 = cv2_module if cv2_module is not None else require_cv2()
 
     def __iter__(self) -> Iterator[Frame]:
@@ -77,8 +99,8 @@ class _CaptureSource:
         gstreamer: bool = False,
         cv2_module: Any | None = None,
     ) -> None:
+        self.camera_id = validate_camera_id(camera_id)
         self._cv2 = cv2_module if cv2_module is not None else require_cv2()
-        self.camera_id = camera_id
         self.source_kind = source_kind
         self.source_name = source_name
         try:

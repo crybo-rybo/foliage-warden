@@ -83,6 +83,11 @@ def test_cli_defaults_to_headless_unbounded_observation() -> None:
     assert not hasattr(args, "record")
 
 
+def test_cli_rejects_camera_ids_that_cannot_form_contract_identifiers() -> None:
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["camera", "--camera-id", "camera/unsafe"])
+
+
 def test_benchmark_summary_percentiles_and_fps() -> None:
     benchmark = BenchmarkAccumulator()
     for value in (10.0, 20.0, 30.0):

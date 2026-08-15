@@ -6,7 +6,14 @@ import numpy as np
 import pytest
 
 from foliage_warden_perception.errors import SourceError
-from foliage_warden_perception.sources import CameraSource, ImageSource, VideoSource
+from foliage_warden_perception.sources import (
+    MAX_CAMERA_ID_LENGTH,
+    CameraSource,
+    Frame,
+    ImageSource,
+    VideoSource,
+    validate_camera_id,
+)
 
 
 class FakeCapture:
@@ -118,3 +125,33 @@ def test_capture_open_failure_is_clear() -> None:
     with pytest.raises(SourceError, match="could not open camera"):
         CameraSource(0, cv2_module=FakeCv2(capture=capture))
     assert capture.released
+
+
+@pytest.mark.parametrize("camera_id", ["", "camera id", "camera/id", "-camera", "c" * 100])
+def test_camera_id_rejects_values_that_cannot_form_contract_ids(camera_id: str) -> None:
+    with pytest.raises(ValueError, match="canonical identifier"):
+        validate_camera_id(camera_id)
+
+
+def test_camera_id_and_safe_integer_bounds_cover_derived_identifiers() -> None:
+    camera_id = "c" * MAX_CAMERA_ID_LENGTH
+    assert validate_camera_id(camera_id) == camera_id
+    frame = Frame(
+        index=9_007_199_254_740_991,
+        captured_at_ms=9_007_199_254_740_991,
+        camera_id=camera_id,
+        source_kind="synthetic",
+        source_name="contract-boundary",
+        bgr=_frame(),
+    )
+    assert len(f"{frame.camera_id}:observation:{frame.index:08d}") == 128
+
+    with pytest.raises(ValueError, match="safe integers"):
+        Frame(
+            index=9_007_199_254_740_992,
+            captured_at_ms=0,
+            camera_id="camera-1",
+            source_kind="synthetic",
+            source_name="overflow",
+            bgr=_frame(),
+        )
