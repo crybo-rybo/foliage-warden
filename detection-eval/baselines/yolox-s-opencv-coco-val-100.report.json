@@ -1,0 +1,461 @@
+{
+  "dataset": {
+    "image_count": 100,
+    "manifest_sha256": "eeaa484d8299ff4980727fedcbd1db9254da950ecab7ab009c70df97f5a04253",
+    "name": "COCO 2017 validation",
+    "selection": {
+      "actual": {
+        "background_negative": 10,
+        "cat_positive": 40,
+        "hard_negative": 20,
+        "person_positive": 30
+      },
+      "algorithm": "balanced-sha256-v1",
+      "available": {
+        "background_negative": 1453,
+        "cat_positive": 184,
+        "hard_negative": 693,
+        "person_positive": 2670
+      },
+      "hard_negative_categories": [
+        "bird",
+        "dog",
+        "horse",
+        "sheep",
+        "cow",
+        "elephant",
+        "bear",
+        "zebra",
+        "giraffe",
+        "bench",
+        "potted plant"
+      ],
+      "planned_count": 100,
+      "requested_count": 100,
+      "seed": 20260814,
+      "selected_count": 100,
+      "target_weights": {
+        "background_negative": 1,
+        "cat_positive": 4,
+        "hard_negative": 2,
+        "person_positive": 3
+      },
+      "targets": {
+        "background_negative": 10,
+        "cat_positive": 40,
+        "hard_negative": 20,
+        "person_positive": 30
+      }
+    }
+  },
+  "definitions": {
+    "ap50": "101-point interpolated average precision at one-to-one IoU >= 0.50; this is not the full pycocotools area/maxDet metric suite",
+    "crowd": "iscrowd ground truths are excluded from recall; otherwise-unmatched predictions with standard IoU >= threshold against them are ignored",
+    "precision_recall": "computed at the per-class operating score thresholds; AP50 uses all predictions retained by the detector confidence floors"
+  },
+  "metrics": {
+    "classes": {
+      "cat": {
+        "ap50": 0.882781,
+        "ap_evaluated_prediction_count": 100,
+        "category_id": 17,
+        "evaluated_prediction_count": 33,
+        "false_negative_count": 11,
+        "false_positive_count": 1,
+        "false_positive_examples": [
+          {
+            "bbox": [
+              402.537994,
+              123.748901,
+              237.462006,
+              296.427734
+            ],
+            "best_ground_truth_iou": 0.331544,
+            "image_id": 364297,
+            "score": 0.524695
+          }
+        ],
+        "ground_truth_count": 43,
+        "ignored_ground_truth_count": 0,
+        "ignored_prediction_count": 0,
+        "miss_examples": [
+          {
+            "annotation_id": 51982,
+            "bbox": [
+              186.67,
+              46.91,
+              320.7,
+              323.57
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 18833
+          },
+          {
+            "annotation_id": 52282,
+            "bbox": [
+              49.69,
+              83.53,
+              210.52,
+              264.01
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 107087
+          },
+          {
+            "annotation_id": 1816133,
+            "bbox": [
+              187.7,
+              101.59,
+              50.15,
+              47.37
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 121586
+          },
+          {
+            "annotation_id": 1816582,
+            "bbox": [
+              233.52,
+              209.77,
+              29.97,
+              36.0
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 149222
+          },
+          {
+            "annotation_id": 51885,
+            "bbox": [
+              217.33,
+              139.78,
+              46.51,
+              81.39
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 176857
+          },
+          {
+            "annotation_id": 49884,
+            "bbox": [
+              39.78,
+              222.8,
+              444.0,
+              147.2
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 223747
+          },
+          {
+            "annotation_id": 48014,
+            "bbox": [
+              87.02,
+              219.17,
+              52.65,
+              42.69
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 366141
+          },
+          {
+            "annotation_id": 51160,
+            "bbox": [
+              272.37,
+              32.63,
+              147.99,
+              288.87
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 435299
+          },
+          {
+            "annotation_id": 47317,
+            "bbox": [
+              233.14,
+              162.6,
+              152.08,
+              91.98
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 492284
+          },
+          {
+            "annotation_id": 48572,
+            "bbox": [
+              236.15,
+              4.17,
+              305.37,
+              292.14
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 540928
+          }
+        ],
+        "precision": 0.969697,
+        "prediction_count": 100,
+        "recall": 0.744186,
+        "score_threshold": 0.5,
+        "true_positive_count": 32
+      },
+      "person": {
+        "ap50": 0.689761,
+        "ap_evaluated_prediction_count": 1371,
+        "category_id": 1,
+        "evaluated_prediction_count": 104,
+        "false_negative_count": 72,
+        "false_positive_count": 21,
+        "false_positive_examples": [
+          {
+            "bbox": [
+              341.213287,
+              60.668671,
+              106.035156,
+              316.329834
+            ],
+            "best_ground_truth_iou": 0.490876,
+            "image_id": 334399,
+            "score": 0.839549
+          },
+          {
+            "bbox": [
+              474.591705,
+              239.622681,
+              144.301117,
+              187.035889
+            ],
+            "best_ground_truth_iou": 0.076622,
+            "image_id": 12670,
+            "score": 0.812225
+          },
+          {
+            "bbox": [
+              583.889893,
+              98.235947,
+              55.831299,
+              233.662308
+            ],
+            "best_ground_truth_iou": 0.0,
+            "image_id": 12670,
+            "score": 0.806519
+          },
+          {
+            "bbox": [
+              0.033042,
+              9.984379,
+              23.134534,
+              125.482418
+            ],
+            "best_ground_truth_iou": 0.0,
+            "image_id": 146667,
+            "score": 0.744324
+          },
+          {
+            "bbox": [
+              105.775925,
+              323.592346,
+              46.230713,
+              48.08844
+            ],
+            "best_ground_truth_iou": 0.0,
+            "image_id": 15751,
+            "score": 0.714676
+          },
+          {
+            "bbox": [
+              124.358047,
+              215.798279,
+              43.238678,
+              109.647644
+            ],
+            "best_ground_truth_iou": 0.039166,
+            "image_id": 360960,
+            "score": 0.695025
+          },
+          {
+            "bbox": [
+              409.937256,
+              51.633812,
+              47.551025,
+              155.107002
+            ],
+            "best_ground_truth_iou": 0.127371,
+            "image_id": 12670,
+            "score": 0.676014
+          },
+          {
+            "bbox": [
+              451.162384,
+              396.103943,
+              86.664703,
+              194.792603
+            ],
+            "best_ground_truth_iou": 0.199753,
+            "image_id": 572462,
+            "score": 0.666356
+          },
+          {
+            "bbox": [
+              293.00708,
+              62.63678,
+              35.22467,
+              115.955109
+            ],
+            "best_ground_truth_iou": 0.448393,
+            "image_id": 456015,
+            "score": 0.658982
+          },
+          {
+            "bbox": [
+              345.107635,
+              128.199188,
+              50.61908,
+              90.477783
+            ],
+            "best_ground_truth_iou": 0.420531,
+            "image_id": 411817,
+            "score": 0.64918
+          }
+        ],
+        "ground_truth_count": 155,
+        "ignored_ground_truth_count": 2,
+        "ignored_prediction_count": 0,
+        "miss_examples": [
+          {
+            "annotation_id": 1289729,
+            "bbox": [
+              334.71,
+              289.5,
+              108.68,
+              132.73
+            ],
+            "best_prediction_iou": 0.256071,
+            "image_id": 12670
+          },
+          {
+            "annotation_id": 1319466,
+            "bbox": [
+              315.29,
+              172.64,
+              77.89,
+              87.01
+            ],
+            "best_prediction_iou": 0.066418,
+            "image_id": 12670
+          },
+          {
+            "annotation_id": 1323932,
+            "bbox": [
+              419.34,
+              162.54,
+              57.71,
+              130.81
+            ],
+            "best_prediction_iou": 0.145198,
+            "image_id": 12670
+          },
+          {
+            "annotation_id": 2026694,
+            "bbox": [
+              349.4,
+              73.6,
+              47.05,
+              95.38
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 12670
+          },
+          {
+            "annotation_id": 1316008,
+            "bbox": [
+              347.29,
+              229.4,
+              23.39,
+              39.52
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 19109
+          },
+          {
+            "annotation_id": 1691370,
+            "bbox": [
+              445.64,
+              241.9,
+              10.46,
+              24.17
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 19109
+          },
+          {
+            "annotation_id": 1692596,
+            "bbox": [
+              552.39,
+              227.77,
+              29.38,
+              35.3
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 19109
+          },
+          {
+            "annotation_id": 1699564,
+            "bbox": [
+              540.75,
+              233.29,
+              13.86,
+              14.06
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 19109
+          },
+          {
+            "annotation_id": 1704009,
+            "bbox": [
+              596.5,
+              221.74,
+              14.91,
+              52.06
+            ],
+            "best_prediction_iou": 0.0,
+            "image_id": 19109
+          },
+          {
+            "annotation_id": 1705615,
+            "bbox": [
+              25.4,
+              223.52,
+              22.38,
+              41.15
+            ],
+            "best_prediction_iou": 0.098058,
+            "image_id": 19109
+          }
+        ],
+        "precision": 0.798077,
+        "prediction_count": 1372,
+        "recall": 0.535484,
+        "score_threshold": 0.5,
+        "true_positive_count": 83
+      }
+    },
+    "iou_threshold": 0.5
+  },
+  "model": {
+    "backend_target": "opencv",
+    "cat_confidence_floor": 0.001,
+    "description": "Apache-2.0 OpenCV Zoo YOLOX-S COCO detector baseline",
+    "id": "yolox_s_opencv_zoo",
+    "nms_iou_threshold": 0.5,
+    "numpy_version": "2.2.6",
+    "opencv_version": "4.14.0",
+    "person_confidence_floor": 0.001,
+    "sha256": "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063",
+    "source_revision": "opencv/opencv_zoo@47534e27c9851bb1128ccc0102f1145e27f23f98"
+  },
+  "prediction_artifact": {
+    "format": "COCO detection results JSON array",
+    "sha256": "f44bcb113bc29a3a88bdf15ad23deaa6048d26a3f19d786aadf204a02aa3a828"
+  },
+  "prediction_count": 1472,
+  "schema_version": 2,
+  "scope_warning": "COCO cat/person detection performance does not establish accuracy on the installed camera, in the garden domain, at night, under occlusion, or for EATING/DIGGING behavior. Thresholds chosen on this same subset are tuning results, not held-out estimates. It must never be used by itself to enable a physical action."
+}

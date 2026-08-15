@@ -1,0 +1,17 @@
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+
+# Public dataset and generated evaluation bytes never belong in Git.
+*.jpg
+*.jpeg
+*.png
+*.zip
+val2017/
+annotations/
+downloads/
+cache/
+reports/
+predictions/

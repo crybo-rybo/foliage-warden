@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foliage-warden-detection-eval"
+version = "0.1.0"
+description = "Reproducible COCO 2017 cat/person detector baseline for Foliage Warden"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Foliage Warden contributors" }]
+dependencies = [
+  "foliage-warden-perception",
+  "numpy>=1.23,<3",
+]
+
+[project.optional-dependencies]
+desktop = ["opencv-python-headless>=4.8,<5"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.12",
+]
+
+[project.scripts]
+foliage-warden-detection-eval = "foliage_warden_detection_eval.cli:entrypoint"
+
+[tool.uv.sources]
+foliage-warden-perception = { path = "../perception", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/foliage_warden_detection_eval"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]

@@ -1,0 +1,1562 @@
+{
+  "annotations": {
+    "archive_md5": "f4bbac642086de4f52a3fdda2de5fa2c",
+    "archive_sha256": "113a836d90195ee1f884e704da6304dfaaecff1f023f49b6ca93c4aaae470268",
+    "archive_size": 252907541,
+    "archive_url": "https://s3.amazonaws.com/images.cocodataset.org/annotations/annotations_trainval2017.zip",
+    "instances_member": "annotations/instances_val2017.json",
+    "instances_sha256": "e8c7f7908f1d7278341fae127d0da654f102f11bd7b21d8aeefa635b8c810b6f"
+  },
+  "categories": {
+    "cat": 17,
+    "person": 1
+  },
+  "dataset": "COCO 2017 validation",
+  "images": [
+    {
+      "file_name": "000000004795.jpg",
+      "height": 480,
+      "id": 4795,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "45eebfab162f82a0d6dacfd8d8fda7d0",
+        "sha256": "6f8994bac6aef0602d4aa4397ecd4b7d579f5b18f66058a2df021352dd22bdc6",
+        "size": 165837,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000004795.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000012670.jpg",
+      "height": 428,
+      "id": 12670,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "abce01dde84f8182f25d140b21dabc46",
+        "sha256": "00c989b165bdde8eb54cbe7d1fcfb0ae7b2ac7f5f23d83baea723e7d2acf7099",
+        "size": 187752,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000012670.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000012748.jpg",
+      "height": 640,
+      "id": 12748,
+      "license_id": 2,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "33a5f996930c1f33a707131b10b328a0",
+        "sha256": "9ccd35fa48729821628123c5d2a57742f49ece28f9813817cfd0ea3867f40831",
+        "size": 192300,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000012748.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 480
+    },
+    {
+      "file_name": "000000013201.jpg",
+      "height": 640,
+      "id": 13201,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "1a08c8d6006b0b7a083926fc002a27aa",
+        "sha256": "b99aa5fe13f26b9350d136cbb103c95896d81bfa504087888f13f76f5bd4adce",
+        "size": 151219,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000013201.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 427
+    },
+    {
+      "file_name": "000000015497.jpg",
+      "height": 480,
+      "id": 15497,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "edb2833f3050b95fc34191acfcd5e1a0",
+        "sha256": "fc0fff04645dfadedbc34e23860dc62c45a213ac22d18b8194d269b66774d745",
+        "size": 72623,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000015497.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000015751.jpg",
+      "height": 427,
+      "id": 15751,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "f86bcc7da3d079d4b7145d0b8bb6512e",
+        "sha256": "e0929307bb91557c288fe98307c198a838abe835820322596232842784f6ce72",
+        "size": 117087,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000015751.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000018833.jpg",
+      "height": 426,
+      "id": 18833,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "9ca7b321bc7ac476a8ada59aa7e3711d",
+        "sha256": "3aaed3d8164deb6f7e5e18f3b1b3fc1b481d32078b342a07b629a7bdefc14e4d",
+        "size": 85243,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000018833.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000019109.jpg",
+      "height": 428,
+      "id": 19109,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "de6729675024f08ce2a4e5a4dd5553c0",
+        "sha256": "5469f123ab838c9fdcc567c13148399dcb4cfa4eeee80e6e56a13627808a6d54",
+        "size": 265893,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000019109.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000021167.jpg",
+      "height": 640,
+      "id": 21167,
+      "license_id": 4,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "f1181622c52ed3e0767f9701ef7256b8",
+        "sha256": "b77df96f91ed9a0842559ea8a238d602d4a09069b9129c43a9d62a27361df156",
+        "size": 49463,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000021167.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 426
+    },
+    {
+      "file_name": "000000031269.jpg",
+      "height": 480,
+      "id": 31269,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "65c36d3ade0c8d7cc54b60e7aaf8842c",
+        "sha256": "91de0bc1f19dbacec3234adfd8e9eb160c5a08bf1dcfc4b6ccc08af09611708a",
+        "size": 184494,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000031269.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000033707.jpg",
+      "height": 612,
+      "id": 33707,
+      "license_id": 6,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "0e8188881582d1621c29d2adf9a785a2",
+        "sha256": "78d30a901a0cdf841fcb9342dc1262d61feaae89e4ef5ee1f0de9e275bfe3464",
+        "size": 218698,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000033707.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 612
+    },
+    {
+      "file_name": "000000039951.jpg",
+      "height": 445,
+      "id": 39951,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "56a558bfef82a3b19695a9f183fa8d7e",
+        "sha256": "471847fe98e8c4672ed59c9cc73fe3699c9654152f667a65a586fb2c24500834",
+        "size": 88447,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000039951.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000051008.jpg",
+      "height": 480,
+      "id": 51008,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "ef3f6909059f76a14f9bfc1de1ea7292",
+        "sha256": "cd615d2609c7ea6fa5c9c132fa8efd924477a05f0333470cf496117b7513fc3e",
+        "size": 123130,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000051008.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000052565.jpg",
+      "height": 458,
+      "id": 52565,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "f9384ceaf6120ec734921fda99f1da9d",
+        "sha256": "a1d362810f97e0dd00ecda4f1d427aec52ba3361c1a15f00cc525d9dc8216ad3",
+        "size": 90885,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000052565.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000060347.jpg",
+      "height": 640,
+      "id": 60347,
+      "license_id": 2,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "23b889651ee6bf77f4fbe85e323d01f2",
+        "sha256": "18e94efcf2eefc061ee834216fce0c436f5f2efe08269f2499cf6b5c628b342d",
+        "size": 374154,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000060347.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 480
+    },
+    {
+      "file_name": "000000074058.jpg",
+      "height": 427,
+      "id": 74058,
+      "license_id": 2,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "c1f3651c58a54e998142f12977bbf183",
+        "sha256": "a619c4064a1a9af3f0d3c20abee5dc8bb05edda1ec0b240e28fb823b4fd9d204",
+        "size": 101325,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000074058.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000078426.jpg",
+      "height": 334,
+      "id": 78426,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "ff3b4f12b89a073a47a35974c351f30c",
+        "sha256": "475db6e34f57f03cf611cc4c359d8707df49628491adc27d6b5209607284778b",
+        "size": 73195,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000078426.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000089271.jpg",
+      "height": 524,
+      "id": 89271,
+      "license_id": 6,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "adf62ff07a6548c1b138e8159bbf0c10",
+        "sha256": "a9f557f680083c45c3b9e32e3d70daec201f204e987b3d20a3eb592836893828",
+        "size": 234438,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000089271.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000096427.jpg",
+      "height": 427,
+      "id": 96427,
+      "license_id": 2,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "55016808377a771285ce48f62e99600c",
+        "sha256": "e1d4d1457ed0bf6d415ba8cc4b9fb0dd48264c202a654f1d49bca95fce523e03",
+        "size": 153042,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000096427.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000099039.jpg",
+      "height": 480,
+      "id": 99039,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "c7ab6bfa6ad741db3675aa812261aa6f",
+        "sha256": "03b7ba8aac61bb08650f9fb4bb0aad823e81e49156c2b5d15fdfb2d78fd4c3cc",
+        "size": 230920,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000099039.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000106389.jpg",
+      "height": 480,
+      "id": 106389,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "9f3c2700330700b83b0da308bc0d49a5",
+        "sha256": "637792348a3b56f4cf68f840f5ad0f17c235b0758b8c231de126aa0409cb2ec9",
+        "size": 138868,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000106389.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000107087.jpg",
+      "height": 427,
+      "id": 107087,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "8a7b1b594fa69b1632039f2ef97a1389",
+        "sha256": "0b668d089a3885a2613c16869b6f9e7e636fb94077185f30aa8c36da05e46677",
+        "size": 91881,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000107087.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000109313.jpg",
+      "height": 640,
+      "id": 109313,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "5ad03c9690350c269d01a828ef5ab67e",
+        "sha256": "d0ab7148b6dd5ab937c2f2cd1425ce18414bc4a74e4a70d5b7b8f42d45ab7865",
+        "size": 125686,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000109313.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 480
+    },
+    {
+      "file_name": "000000121586.jpg",
+      "height": 478,
+      "id": 121586,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "bab3a60be38182295760c925d476b267",
+        "sha256": "594fe5627bb6841d17f01439c7bcc95374e501c6e1b69a63ddd477298f3d13b8",
+        "size": 154375,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000121586.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000128112.jpg",
+      "height": 640,
+      "id": 128112,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "9197ece1059b569540dbfde459d3b2d5",
+        "sha256": "39bfc0d7dee7c2751679be04277e653b7305a86f055d7145e9a5173fbd40e40e",
+        "size": 159751,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000128112.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 425
+    },
+    {
+      "file_name": "000000134689.jpg",
+      "height": 640,
+      "id": 134689,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "135331629e9da3ad65b6bb74ea7ff64f",
+        "sha256": "f951a4e9e970a0e2d19efc702cac3c01f08cae3dbe6080cd91c218509b008c01",
+        "size": 220111,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000134689.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 427
+    },
+    {
+      "file_name": "000000146667.jpg",
+      "height": 539,
+      "id": 146667,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "be823445c700c638d3c8938e16148986",
+        "sha256": "6dc6962e83d4db7c28702832640b6a42173ac9bdd97130e733069c6e0b8d3e75",
+        "size": 179772,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000146667.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000149222.jpg",
+      "height": 383,
+      "id": 149222,
+      "license_id": 2,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "2bb1081654da858c29163152fd5f831d",
+        "sha256": "e647775934c420d34cdbb9b3a949a6bd721ab5c7330fc84b74dd0c78c5df92fd",
+        "size": 40088,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000149222.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000154339.jpg",
+      "height": 427,
+      "id": 154339,
+      "license_id": 1,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "213c5569f20724268fdb58664b330118",
+        "sha256": "dae5ae8f6c1f802496dcbac451f0c97d694bc1c5e58d1653c203405697be0634",
+        "size": 90488,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000154339.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000157807.jpg",
+      "height": 427,
+      "id": 157807,
+      "license_id": 5,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "07b8816a7ce92cf2d99e2a088d8af221",
+        "sha256": "41a423af33123a924fd6b38d5318c0f9db0f83c139d32b718b2b09fc6bace310",
+        "size": 119795,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000157807.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000176701.jpg",
+      "height": 480,
+      "id": 176701,
+      "license_id": 2,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "128910021a6a27e37dc74ba1eca546af",
+        "sha256": "ae6f462f467cd7cd7f6f3ec2e3c34a12f6f29549e44dad3e1c5324ebed87255f",
+        "size": 270453,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000176701.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000176857.jpg",
+      "height": 375,
+      "id": 176857,
+      "license_id": 2,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "14e6b196c71d5f5abb8cf9b05803fc25",
+        "sha256": "78753eb0e7c4ee56defbd91c02b01e264c6fe46cc99e359f2a82d7876815d6ea",
+        "size": 101669,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000176857.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000178618.jpg",
+      "height": 640,
+      "id": 178618,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "d0d42c1e08984b6d7e47a037f05296f8",
+        "sha256": "38c4410396ba7348d107bdd35d12042ee9ba8db5715ccbf0d4d3642e1e061cd7",
+        "size": 149851,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000178618.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 446
+    },
+    {
+      "file_name": "000000186296.jpg",
+      "height": 480,
+      "id": 186296,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "d2ece6790ccb64756837d5772daf0e15",
+        "sha256": "4a3a540b0a0bf07f8daef3fd6f951fd798959a550b2c4b4ecbf59bf911dce1b6",
+        "size": 157289,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000186296.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000209747.jpg",
+      "height": 350,
+      "id": 209747,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "526b890ad5eca2e9667573249e024d60",
+        "sha256": "1b46886995057f6f22e6a7b53100789775c7531c1e198fd3101f0fac532013c1",
+        "size": 62056,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000209747.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000209757.jpg",
+      "height": 640,
+      "id": 209757,
+      "license_id": 4,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "9f2e6f0208c45ca2b384beb0d3d2657f",
+        "sha256": "e1ae8a5bb12ad20edfca2082821e4028a5bf27a9528ad2aa6d3a6b493a4418ad",
+        "size": 177953,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000209757.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 426
+    },
+    {
+      "file_name": "000000213171.jpg",
+      "height": 500,
+      "id": 213171,
+      "license_id": 5,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "4c3ab21063ec9b1f7fddb60b14f625d8",
+        "sha256": "ad3b48655f5f185d6fd312e018ed1451dbcc063a8e270aa0fe587987f9bc0503",
+        "size": 169653,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000213171.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 375
+    },
+    {
+      "file_name": "000000222458.jpg",
+      "height": 424,
+      "id": 222458,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "82334a2c73f545ba3ba0d55110479c48",
+        "sha256": "b66a00bd95713529ea1ad346549d625019db4dc74b4082ef4f000da89778ac05",
+        "size": 189103,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000222458.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000223747.jpg",
+      "height": 370,
+      "id": 223747,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "3c7636cfbd548331e61d45cefd8bc105",
+        "sha256": "20a7e7f2310e42c3618a49d1dc62823bb4c03ca308ca8469202f26f6cf586340",
+        "size": 37205,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000223747.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000223789.jpg",
+      "height": 500,
+      "id": 223789,
+      "license_id": 4,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "2537801ce37485afd9068249743de3c1",
+        "sha256": "41841d3779a3caafc02c4e815904313d71a2864be1b54513a58be4a146bdf7aa",
+        "size": 71809,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000223789.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 346
+    },
+    {
+      "file_name": "000000225184.jpg",
+      "height": 640,
+      "id": 225184,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "ac5847096aa8c32bf42db5ce940810ec",
+        "sha256": "aa03f1ca7f63f541daf98a9f14e4674f909aa2d43c242b8b54d63a479275fd2e",
+        "size": 239009,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000225184.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 457
+    },
+    {
+      "file_name": "000000227044.jpg",
+      "height": 480,
+      "id": 227044,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "bddaeabfb68450c97f97c936fa988401",
+        "sha256": "dcc81cb0aa32b7cd672fc08dd42d04a51f9a1c63bc06c55829f6459216dc146c",
+        "size": 91908,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000227044.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000230166.jpg",
+      "height": 428,
+      "id": 230166,
+      "license_id": 3,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "d40a283e137f919903af9d8b23c1e196",
+        "sha256": "7ea597cbad14789435e8df0ab919bd0ec43715dec13c1b44ec0fd174637967ab",
+        "size": 229562,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000230166.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000243344.jpg",
+      "height": 640,
+      "id": 243344,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "ac17693674fbcdda68c68a0f62ed5165",
+        "sha256": "4c42a89dc3e48343fe5800aa3711548466b9c295976b958c047e6cb5a4eb374b",
+        "size": 180471,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000243344.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 480
+    },
+    {
+      "file_name": "000000245764.jpg",
+      "height": 480,
+      "id": 245764,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "361a8784c630828eafebbf7b523b9b70",
+        "sha256": "b07aaa24e7340265634e789ae03880b7a15da4ae42d4abcb2f5a0aa2b45ec383",
+        "size": 72326,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000245764.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000245915.jpg",
+      "height": 333,
+      "id": 245915,
+      "license_id": 4,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "c5af976452e0642ee64d2ab7037fc983",
+        "sha256": "c676dee2e229fcc635af6450d0c629e34cf900162f950e97cde17e18821acc23",
+        "size": 122433,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000245915.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000250758.jpg",
+      "height": 480,
+      "id": 250758,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "c9b2d9a34414eba3cb28cbeaca6c43ca",
+        "sha256": "8d800ba75e182d46dcbcc48323b38864a41cfa3ab0d92ee810a55d5a70158933",
+        "size": 187496,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000250758.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000255912.jpg",
+      "height": 359,
+      "id": 255912,
+      "license_id": 1,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "594af5bc15b905d5479eddf2c8e79299",
+        "sha256": "117febe96f79598d223d238d7df497859894112163fdbd9e6097bd434d702f47",
+        "size": 228804,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000255912.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000263594.jpg",
+      "height": 381,
+      "id": 263594,
+      "license_id": 3,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "bb8972e948c6aa02eff0ca0a86d3cdca",
+        "sha256": "9dff529c08db5dee9c6ef3bb4a381ef813e9032c98350e464ad68df0408fa441",
+        "size": 155198,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000263594.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000278463.jpg",
+      "height": 480,
+      "id": 278463,
+      "license_id": 2,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "7b65c08ac7717f90bf33aff011a20006",
+        "sha256": "991fe427551c787dcae0a60952f6506de50cd9d4e16040072929108f34c5eebd",
+        "size": 106293,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000278463.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000284762.jpg",
+      "height": 426,
+      "id": 284762,
+      "license_id": 1,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "a2865fc6926e928c3267e10095bc68ea",
+        "sha256": "9b6fbb641587c76dce561a05d715bbb078175d4a2f93131f2b90ef297b9226b7",
+        "size": 130538,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000284762.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000286182.jpg",
+      "height": 640,
+      "id": 286182,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "80358962872bf07a47af250547c98d76",
+        "sha256": "916af45e543c1d1aac91807328a1d0437b28dcab1652fe89666cb43e8c188301",
+        "size": 256689,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000286182.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 478
+    },
+    {
+      "file_name": "000000286708.jpg",
+      "height": 481,
+      "id": 286708,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "2fcd54ccd57922027e4f84e728322f4a",
+        "sha256": "a7b888fd1076cc9816e78e96ecb94e7a346e740d578af0dcbc037319944c1bc3",
+        "size": 117048,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000286708.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000296649.jpg",
+      "height": 427,
+      "id": 296649,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "3dfbcbef5e58eeb1101808e303ea80ea",
+        "sha256": "3cc7ef25567cdb68f5e51574c058e2764ef8ab36d4a31e9e31c423f8d78612fc",
+        "size": 147015,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000296649.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000298738.jpg",
+      "height": 640,
+      "id": 298738,
+      "license_id": 3,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "4c1d3e64ff94b3cb5c1506df51b78cd8",
+        "sha256": "40d18e68193a82eecf07bb677405ae4e01bb2cb6e3fa065e953f3a0c00912f0c",
+        "size": 246214,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000298738.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 427
+    },
+    {
+      "file_name": "000000312213.jpg",
+      "height": 480,
+      "id": 312213,
+      "license_id": 2,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "2964dd553647748ccaf27245e7bbdc24",
+        "sha256": "9a1d215c4b623a2a1e7c0c4b84de1ae6d52f9f6c0cbe1f19b6e0147470b3ca81",
+        "size": 95760,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000312213.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000334399.jpg",
+      "height": 480,
+      "id": 334399,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "80cd0d6e49c24f088b2f8cd3eb0a8742",
+        "sha256": "37a81774809017a6f6bd3914f2a82d070fba5f3d93d0ed87551de3bec64a537b",
+        "size": 143187,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000334399.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000359219.jpg",
+      "height": 480,
+      "id": 359219,
+      "license_id": 5,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "98cfa10dd7a7d610af110165ed81a5ff",
+        "sha256": "621420fd7414fed8900286441c019ea1c8fd7ba9a6793b7139096baee01ca319",
+        "size": 273576,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000359219.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000360943.jpg",
+      "height": 640,
+      "id": 360943,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "43967e9617b68fd044ae581e0b15666c",
+        "sha256": "9a6d9379fd7feb77987a43d1ce0e304e2eb5dd7f28c2a818fd8baec5ed4cb700",
+        "size": 67185,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000360943.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 501
+    },
+    {
+      "file_name": "000000360960.jpg",
+      "height": 640,
+      "id": 360960,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "674d9d82534a0b808db7ca00d1e61a85",
+        "sha256": "574c21ac9a17d685ccb2077c8c977ea2b20e419aa0a9d684a17b5be072fe58a5",
+        "size": 126394,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000360960.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 426
+    },
+    {
+      "file_name": "000000364297.jpg",
+      "height": 428,
+      "id": 364297,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "70c33f6248e1aac5cbd4d4aa05df2d51",
+        "sha256": "26fe8e8acf4da5acf46c8a745530edfb97fc98622717e3133ebde99b35a7ca33",
+        "size": 79192,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000364297.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000366141.jpg",
+      "height": 480,
+      "id": 366141,
+      "license_id": 5,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "efe1b71b0b76afa7d862d2a4eac85c61",
+        "sha256": "750ecf4c01f7690671d20dac73f7ee0ab2929a6fea7db0e953abeb69e8e81b95",
+        "size": 87324,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000366141.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000368456.jpg",
+      "height": 480,
+      "id": 368456,
+      "license_id": 2,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "9724618bbb9ecb6e37e1167202dc0feb",
+        "sha256": "9981043c3967347d39d5c42934d5b498d41f1285110e2ea6efb8614e1eaa8d52",
+        "size": 213553,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000368456.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000368900.jpg",
+      "height": 480,
+      "id": 368900,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "0827855aa0453ff7dcba78f67dd319be",
+        "sha256": "125a508da98e2c2413ece8f6a8bf0af1740e2018fec9e7b5214d86590ccfe0a0",
+        "size": 92128,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000368900.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000376284.jpg",
+      "height": 333,
+      "id": 376284,
+      "license_id": 1,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "33ba9456c6237b8b07a8dc6c0d2ef072",
+        "sha256": "eb6f932ea8c4865107c802e4a9d23730d0991f6c869b63f8f314471c42f83eb2",
+        "size": 129809,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000376284.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000389451.jpg",
+      "height": 479,
+      "id": 389451,
+      "license_id": 4,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "26518594b66e451f10d441bf99e1c90a",
+        "sha256": "7ed89ccb111a4f6b834dc1a6b7c041371631c38c4134d3f9ddd0a6ff3b62770f",
+        "size": 187004,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000389451.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000402473.jpg",
+      "height": 480,
+      "id": 402473,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "6c2616d306e7f83aa76386bd9ff59ecf",
+        "sha256": "69f89d6052178b9708bb241e0287fc7508cf971c41700414b0358494c648cbce",
+        "size": 64065,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000402473.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000411817.jpg",
+      "height": 480,
+      "id": 411817,
+      "license_id": 5,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "167558ab31e19f362266d7332624160c",
+        "sha256": "586beec9cea94bff35cc953ae63f759cfe3a354073565ab8cb6e7467cc93584e",
+        "size": 144978,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000411817.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000424545.jpg",
+      "height": 375,
+      "id": 424545,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "a91b062672f809d53f22cc027dff5b72",
+        "sha256": "fb150820945eb63433c79bbaee3b7394eb120ed1ef82df690e24209851abe7d3",
+        "size": 106391,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000424545.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000430871.jpg",
+      "height": 428,
+      "id": 430871,
+      "license_id": 4,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "83c60fb2a01d3ab56c5482d3d84aeb80",
+        "sha256": "518e4b033ed91a9785b673ee8dae9419a5723b8260e8f0e4aa17b7848ca5b7d9",
+        "size": 66646,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000430871.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000432468.jpg",
+      "height": 640,
+      "id": 432468,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "dbdebbb8f3e816272dc056c79d334286",
+        "sha256": "784ba926f3dd7a7cc5b93e0ba2526692eb9f7384d3613d23b61c3423bad43061",
+        "size": 86061,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000432468.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 427
+    },
+    {
+      "file_name": "000000434230.jpg",
+      "height": 313,
+      "id": 434230,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "94c59fd65fb529c12d537dc1cd96e9b9",
+        "sha256": "cb36f3c61b3eba0f1598c1c50555a1a18ed254ecbc8225d4eecb6d29e6f49493",
+        "size": 180352,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000434230.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000435299.jpg",
+      "height": 480,
+      "id": 435299,
+      "license_id": 4,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "473236da8d84559275de09065216e538",
+        "sha256": "a6e060e6e23667a937f1130eed8616b97166e546e148cc62c1f82037b4c3738d",
+        "size": 129886,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000435299.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000455937.jpg",
+      "height": 480,
+      "id": 455937,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "5a731ff79f16914fe4b244249e0e9614",
+        "sha256": "1010b85b88a9ca6b84856f7850b018e114a024b782f43cae0f5a1d4ada68a5b2",
+        "size": 249838,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000455937.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000456015.jpg",
+      "height": 427,
+      "id": 456015,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "71f6d73736697ed3005fad6269ee6431",
+        "sha256": "fd3dfae9a14c36f43036487f509e9440b9b73e2bfb830c8b3da3f600a2753059",
+        "size": 138665,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000456015.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000456292.jpg",
+      "height": 640,
+      "id": 456292,
+      "license_id": 4,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "b3d4e1049046e095725637a91fa9f1d9",
+        "sha256": "7e17a306f9e0c9422166a5adc9ee6a91412a37303b1d674f5e16cd7e83965fe6",
+        "size": 109667,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000456292.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 480
+    },
+    {
+      "file_name": "000000460841.jpg",
+      "height": 375,
+      "id": 460841,
+      "license_id": 4,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "cfc511fd82a3100801ae13117c0fce7a",
+        "sha256": "9bbf60c0ed50dde4a0b84c75b198496f321df872e28a7b999b3d43d777a988d1",
+        "size": 87549,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000460841.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000464251.jpg",
+      "height": 458,
+      "id": 464251,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "b922bf922721870f14ac22ae0da9cffb",
+        "sha256": "609bbd8b75267ff7c43847ca1df7d4d81760114f7592f8392ca136f9fe3825d7",
+        "size": 227062,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000464251.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000466339.jpg",
+      "height": 640,
+      "id": 466339,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "ee54dfd9e21a3feb6552cc02674d9e62",
+        "sha256": "c2f11a1c919b1d1969c879b79e51250b83baa0187b42c32a820f7406bc489803",
+        "size": 91590,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000466339.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 359
+    },
+    {
+      "file_name": "000000473015.jpg",
+      "height": 427,
+      "id": 473015,
+      "license_id": 6,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "aba8dd995e6783ac5535079c48232755",
+        "sha256": "63624f7eab4948f4a15b7f2010dbd70f7c5a5db6fe8ab640afd1b51a01521b43",
+        "size": 229274,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000473015.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000484296.jpg",
+      "height": 480,
+      "id": 484296,
+      "license_id": 1,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "f600e1a96d13383e1bdc182b0ac6c993",
+        "sha256": "e721612148abd0e23e645f818c987e020fa5c9be3ec4b07974d366eea463d9bd",
+        "size": 337796,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000484296.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000485972.jpg",
+      "height": 640,
+      "id": 485972,
+      "license_id": 2,
+      "stratum": "background_negative",
+      "verified_content": {
+        "md5": "1f146b6b2246eb4a3b6f7b7192e89e99",
+        "sha256": "ac81c8194f2021cfcc5c420b5395f186bd30a40886362ce968159644503e491f",
+        "size": 155896,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000485972.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 426
+    },
+    {
+      "file_name": "000000486479.jpg",
+      "height": 375,
+      "id": 486479,
+      "license_id": 4,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "f0f82b2d8fed9f233204295490c17fa2",
+        "sha256": "9f3bf68815b9d35646131e84d97ed6d20fd9de4d343cded54a8f726e4c167de7",
+        "size": 119526,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000486479.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000492284.jpg",
+      "height": 480,
+      "id": 492284,
+      "license_id": 2,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "b5815718eb0a5b944d0b2b094994ecc8",
+        "sha256": "fe7f8b4de9c3e062b413ae8e5688cb854a595bdcddc1b02566fb6e64b93b92fc",
+        "size": 175493,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000492284.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000494634.jpg",
+      "height": 480,
+      "id": 494634,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "9d2fbbf5128e5998a8f8f25507787320",
+        "sha256": "ed95442934c1c0b0d585992e8efbdfa94dd28d664187fb35be5f1d95b7486aa9",
+        "size": 85753,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000494634.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000512403.jpg",
+      "height": 640,
+      "id": 512403,
+      "license_id": 3,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "52a600f448c777ae5873f6b5e59a60b0",
+        "sha256": "f0fc3a1b9aa5e80903dd63ad4aca8bb72c62b9939b211a8fa0abc96482589b40",
+        "size": 150484,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000512403.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 529
+    },
+    {
+      "file_name": "000000514376.jpg",
+      "height": 480,
+      "id": 514376,
+      "license_id": 4,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "2494c1d7f9f5b822b3e48ed4bbd1f933",
+        "sha256": "951d0f6e435a5cafbdc7fa40f8e5f42467c0ecb2259576c7ffc2eb784e3193a7",
+        "size": 398683,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000514376.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000530099.jpg",
+      "height": 375,
+      "id": 530099,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "cb6ef917d529f96c6ab6ac67ad60b950",
+        "sha256": "ff6dbb424b63a078204e3a6705dd73c985470692b23ce29628cd3d4964817d07",
+        "size": 64735,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000530099.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000534673.jpg",
+      "height": 480,
+      "id": 534673,
+      "license_id": 4,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "44954c3ff24f91f64d0d0ff817a8a81d",
+        "sha256": "e3596c112886930b23b8e698ad5f637a1fe7522f45acc7f7a927b4a7e294757a",
+        "size": 190869,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000534673.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000540928.jpg",
+      "height": 455,
+      "id": 540928,
+      "license_id": 4,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "ee689ec2035381834c7cc726db04bf7a",
+        "sha256": "7ae22ea3eb26ad5e692bc358d9906c49c3b9135993a99c9d489893567b1c8fcc",
+        "size": 76768,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000540928.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000546717.jpg",
+      "height": 640,
+      "id": 546717,
+      "license_id": 4,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "aadee4d9414d831b378205563b5aae42",
+        "sha256": "568866e8e9f96505d841eef5abd34f0a35b60aaeeed9daf6d168eeb7f8e45521",
+        "size": 129526,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000546717.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 471
+    },
+    {
+      "file_name": "000000551815.jpg",
+      "height": 480,
+      "id": 551815,
+      "license_id": 1,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "65459688ce9cf26b92e404ba2f12f144",
+        "sha256": "f1fda041005eea061444485aeb8f0007bd286e8bd13f916157436caf8d6e6a6b",
+        "size": 83283,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000551815.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000554291.jpg",
+      "height": 428,
+      "id": 554291,
+      "license_id": 4,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "618b59a154dcc8771fce450c5b5402d9",
+        "sha256": "87cfe902780e460e352a5de8b0ced6a8372dc7317aba136279edf3ff4e0527dc",
+        "size": 102865,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000554291.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000555705.jpg",
+      "height": 371,
+      "id": 555705,
+      "license_id": 5,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "7325042dfcfb9c4db1ab199f70e221ee",
+        "sha256": "33cbe32cfb91e75486c65ad18c5ae9e824127512a41a785e470fe418af1bca1b",
+        "size": 146964,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000555705.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000558073.jpg",
+      "height": 375,
+      "id": 558073,
+      "license_id": 4,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "848ccdd9164dc9fe6f913212406d3069",
+        "sha256": "0d1362b10840487db2abde48bc1cd2c361adfb248a76e8c41764a3791a7e163b",
+        "size": 48321,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000558073.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 500
+    },
+    {
+      "file_name": "000000562443.jpg",
+      "height": 480,
+      "id": 562443,
+      "license_id": 3,
+      "stratum": "hard_negative",
+      "verified_content": {
+        "md5": "82b0999d35db4220a960b14387d01aa6",
+        "sha256": "f6e3a840cb4e046cc3933e2bf3eb275eada13c4adcc9f2e2b56b1d00f40bb6e4",
+        "size": 230872,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000562443.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000571718.jpg",
+      "height": 427,
+      "id": 571718,
+      "license_id": 1,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "aedb3af8ee89f4ae587a4e41d690cdce",
+        "sha256": "dce1a732ac3d4a47f05c5013d25124d576d1f8b2127e75b143023f296f79c83f",
+        "size": 243481,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000571718.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000571857.jpg",
+      "height": 426,
+      "id": 571857,
+      "license_id": 4,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "d87c65174132c253aecc44ee11f12f32",
+        "sha256": "d8771d52ba37b5ebfff1a5dee278d11dfed9c4b3e67a19c89e21fc8000a148c0",
+        "size": 183118,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000571857.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 640
+    },
+    {
+      "file_name": "000000572388.jpg",
+      "height": 500,
+      "id": 572388,
+      "license_id": 3,
+      "stratum": "cat_positive",
+      "verified_content": {
+        "md5": "3ced273c75c96a69cbd01d06acfaa644",
+        "sha256": "b20f2652ed377a5340cb8ca273348ba58ebf50465d6818a42ae4e74647d8ade4",
+        "size": 83699,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000572388.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 349
+    },
+    {
+      "file_name": "000000572462.jpg",
+      "height": 612,
+      "id": 572462,
+      "license_id": 3,
+      "stratum": "person_positive",
+      "verified_content": {
+        "md5": "bf85822d737f020a5b2cd5692fea4191",
+        "sha256": "4ea4df9f43ef85d3f3ffe88fb95c945ac89b2116df442c3ba30b3ef9dacb6e95",
+        "size": 140329,
+        "url": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000572462.jpg",
+        "verification": "TLS S3 Content-Length and simple MD5 ETag"
+      },
+      "width": 612
+    }
+  ],
+  "schema_version": 1,
+  "selection": {
+    "actual": {
+      "background_negative": 10,
+      "cat_positive": 40,
+      "hard_negative": 20,
+      "person_positive": 30
+    },
+    "algorithm": "balanced-sha256-v1",
+    "available": {
+      "background_negative": 1453,
+      "cat_positive": 184,
+      "hard_negative": 693,
+      "person_positive": 2670
+    },
+    "hard_negative_categories": [
+      "bird",
+      "dog",
+      "horse",
+      "sheep",
+      "cow",
+      "elephant",
+      "bear",
+      "zebra",
+      "giraffe",
+      "bench",
+      "potted plant"
+    ],
+    "planned_count": 100,
+    "requested_count": 100,
+    "seed": 20260814,
+    "selected_count": 100,
+    "target_weights": {
+      "background_negative": 1,
+      "cat_positive": 4,
+      "hard_negative": 2,
+      "person_positive": 3
+    },
+    "targets": {
+      "background_negative": 10,
+      "cat_positive": 40,
+      "hard_negative": 20,
+      "person_positive": 30
+    }
+  }
+}
