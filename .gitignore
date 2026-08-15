@@ -1,0 +1,28 @@
+# Native build output
+/build/
+/cmake-build-*/
+
+# Python environments and caches
+/.venv/
+/python/.venv/
+__pycache__/
+*.py[cod]
+/.pytest_cache/
+/python/.pytest_cache/
+/.ruff_cache/
+
+# Generated runtime data. These may contain household video and must never be
+# committed accidentally.
+/artifacts/
+/events/
+/recordings/
+/models/*.onnx
+/models/*.engine
+/models/*.plan
+
+# Tooling
+.coverage
+coverage.xml
+compile_commands.json
+.DS_Store
+
