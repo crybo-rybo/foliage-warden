@@ -92,6 +92,7 @@ class RecorderConfig:
     max_buffer_bytes: int = 256 * 1024 * 1024
     max_active_frames: int = 600
     max_active_bytes: int = 512 * 1024 * 1024
+    max_accepted_observations: int = 1_000_000
 
     def __post_init__(self) -> None:
         for name in ("pre_event_ms", "post_event_ms"):
@@ -104,6 +105,7 @@ class RecorderConfig:
             "max_buffer_bytes",
             "max_active_frames",
             "max_active_bytes",
+            "max_accepted_observations",
             "max_incidents",
             "max_disk_bytes",
         ):

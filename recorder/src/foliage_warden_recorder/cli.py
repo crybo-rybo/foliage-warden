@@ -32,6 +32,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-buffer-bytes", type=int, default=256 * 1024 * 1024)
     parser.add_argument("--max-active-frames", type=int, default=600)
     parser.add_argument("--max-active-bytes", type=int, default=512 * 1024 * 1024)
+    parser.add_argument("--max-accepted-observations", type=int, default=1_000_000)
     parser.add_argument("--minimum-approach-overlap", type=float, default=0.01)
     parser.add_argument("--max-incidents", type=int, default=100)
     parser.add_argument("--max-disk-bytes", type=int, default=5 * 1024 * 1024 * 1024)
@@ -56,6 +57,7 @@ def main(argv: list[str] | None = None) -> int:
             max_buffer_bytes=args.max_buffer_bytes,
             max_active_frames=args.max_active_frames,
             max_active_bytes=args.max_active_bytes,
+            max_accepted_observations=args.max_accepted_observations,
             nominal_fps=source.fps,
             minimum_approach_overlap=args.minimum_approach_overlap,
             max_incidents=args.max_incidents,

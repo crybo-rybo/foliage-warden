@@ -20,6 +20,12 @@ from foliage_warden_recorder import (
     RecorderStateError,
     StorageError,
 )
+from foliage_warden_recorder.observation import (
+    MAX_OBSERVATION_JSON_BYTES,
+    MAX_OBSERVATION_JSON_DEPTH,
+    MAX_OBSERVATION_JSON_NODES,
+    MAX_OBSERVATION_TRACKS,
+)
 
 
 class FakeEncoder:
@@ -97,6 +103,8 @@ def observation(
         "observation": {
             "camera_id": item.camera_id,
             "captured_at_ms": item.captured_at_ms,
+            "frame_id": f"{item.camera_id}:frame:{item.sequence:08d}",
+            "observation_id": f"{item.camera_id}:observation:{item.sequence:08d}",
             "tracks": tracks,
         },
         "record_type": "perception_observation",
@@ -105,6 +113,33 @@ def observation(
         "source": {"kind": item.source_kind, "name": item.source_name},
         "would_action": False,
     }
+
+
+def canonical_json_bytes(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+
+
+def provenance(published: Any) -> dict[str, Any]:
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    return metadata["perception_provenance"]
+
+
+def write_metadata(path: Path, metadata: dict[str, Any]) -> None:
+    path.write_bytes(canonical_json_bytes(metadata) + b"\n")
+
+
+def recompute_binding_stream_sha256(frame_bindings: list[dict[str, Any]]) -> str:
+    digest = hashlib.sha256()
+    for binding in frame_bindings:
+        digest.update(canonical_json_bytes(binding))
+        digest.update(b"\n")
+    return digest.hexdigest()
 
 
 def make_recorder(
@@ -133,10 +168,13 @@ def make_recorder(
 def test_pre_and_post_boundaries_and_deterministic_metadata(tmp_path: Path) -> None:
     recorder, encoder = make_recorder(tmp_path / "first")
     published = None
+    observations = []
     for sequence in range(7):
         item = frame(sequence)
         cats = (("cat-1", 0.5),) if sequence == 4 else ()
-        published = recorder.process(item, observation(item, cats=cats)) or published
+        event = observation(item, cats=cats)
+        observations.append(event)
+        published = recorder.process(item, event) or published
 
     assert published is not None
     assert encoder.calls == [[2, 3, 4, 5, 6]]
@@ -157,6 +195,26 @@ def test_pre_and_post_boundaries_and_deterministic_metadata(tmp_path: Path) -> N
         metadata["clip"]["sha256"] == hashlib.sha256(published.clip_path.read_bytes()).hexdigest()
     )
     assert metadata["privacy"] == {"audio": False, "display": False, "network": False}
+    provenance_metadata = metadata["perception_provenance"]
+    bindings = provenance_metadata["frame_bindings"]
+    assert provenance_metadata["record_count"] == metadata["clip"]["frame_count"] == 5
+    assert [binding["encoded_frame_index"] for binding in bindings] == list(range(5))
+    assert [binding["sequence"] for binding in bindings] == [2, 3, 4, 5, 6]
+    for binding, event in zip(bindings, observations[2:], strict=True):
+        nested = event["observation"]
+        assert binding["captured_at_ms"] == nested["captured_at_ms"]
+        assert binding["frame_id"] == nested["frame_id"]
+        assert binding["observation_id"] == nested["observation_id"]
+        assert (
+            binding["perception_record_sha256"]
+            == hashlib.sha256(canonical_json_bytes(event)).hexdigest()
+        )
+        reordered = dict(reversed(list(event.items())))
+        assert (
+            hashlib.sha256(canonical_json_bytes(reordered)).hexdigest()
+            == binding["perception_record_sha256"]
+        )
+    assert provenance_metadata["stream_sha256"] == recompute_binding_stream_sha256(bindings)
     assert stat.S_IMODE(published.clip_path.stat().st_mode) == 0o600
     assert stat.S_IMODE(published.metadata_path.stat().st_mode) == 0o600
 
@@ -184,6 +242,9 @@ def test_retrigger_during_post_window_coalesces_one_incident(tmp_path: Path) -> 
     assert encoder.calls == [[0, 1, 2, 3, 4, 5]]
     metadata = json.loads(published[0].metadata_path.read_text())
     assert [sample["sequence"] for sample in metadata["trigger"]["samples"]] == [1, 3]
+    assert [
+        binding["sequence"] for binding in metadata["perception_provenance"]["frame_bindings"]
+    ] == [0, 1, 2, 3, 4, 5]
     assert metadata["termination"] == "post_event_elapsed"
 
 
@@ -277,9 +338,16 @@ def test_rolling_prebuffer_is_also_bounded_by_frame_count(tmp_path: Path) -> Non
         item = frame(sequence)
         recorder.process(item, observation(item, cats=(("cat", 0.5),) if sequence == 5 else ()))
     final = frame(6)
-    recorder.process(final, observation(final))
+    published = recorder.process(final, observation(final))
 
     assert encoder.calls == [[3, 4, 5, 6]]
+    assert published is not None
+    assert [binding["sequence"] for binding in provenance(published)["frame_bindings"]] == [
+        3,
+        4,
+        5,
+        6,
+    ]
 
 
 def test_prebuffer_is_bounded_by_decoded_pixel_bytes(tmp_path: Path) -> None:
@@ -304,9 +372,15 @@ def test_prebuffer_is_bounded_by_decoded_pixel_bytes(tmp_path: Path) -> None:
         )
         assert recorder.buffered_byte_count <= 6
     clear = frame(4, pixels=bytearray(b"abc"))
-    recorder.process(clear, observation(clear))
+    published = recorder.process(clear, observation(clear))
 
     assert encoder.calls == [[2, 3, 4]]
+    assert published is not None
+    assert [binding["sequence"] for binding in provenance(published)["frame_bindings"]] == [
+        2,
+        3,
+        4,
+    ]
 
 
 def test_active_frame_limit_terminates_and_suppresses_continuous_trigger(
@@ -338,6 +412,7 @@ def test_active_frame_limit_terminates_and_suppresses_continuous_trigger(
     assert published is not None
     assert json.loads(published.metadata_path.read_text())["termination"] == "max_active_frames"
     assert encoder.calls == [[0, 1]]
+    assert [binding["sequence"] for binding in provenance(published)["frame_bindings"]] == [0, 1]
     assert recorder.suppressed_until_clear
 
     still_active = frame(3, pixels=bytearray(b"abc"))
@@ -372,6 +447,7 @@ def test_active_byte_limit_terminates_before_exceeding_bound(tmp_path: Path) -> 
     assert published is not None
     assert json.loads(published.metadata_path.read_text())["termination"] == "max_active_bytes"
     assert encoder.calls == [[0, 1]]
+    assert [binding["sequence"] for binding in provenance(published)["frame_bindings"]] == [0, 1]
     assert not recorder.suppressed_until_clear
     assert recorder.buffered_byte_count == 3
 
@@ -405,16 +481,28 @@ def test_recorder_owns_buffered_pixels_when_capture_reuses_mutable_storage(
     recorder, encoder = make_recorder(tmp_path)
     shared = bytearray(b"000")
     first = frame(0, pixels=shared)
-    recorder.process(first, observation(first))
+    first_observation = observation(first)
+    expected_record_sha256 = hashlib.sha256(canonical_json_bytes(first_observation)).hexdigest()
+    original_frame_id = first_observation["observation"]["frame_id"]
+    recorder.process(first, first_observation)
+    first_observation["observation"]["frame_id"] = "mutated-after-ingestion"
     shared[:] = b"111"
     trigger = frame(1, pixels=shared)
     recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
     shared[:] = b"222"
     clear = frame(2, pixels=shared)
     recorder.process(clear, observation(clear))
-    recorder.close()
+    published = recorder.close()
 
     assert encoder.pixel_calls == [[b"000", b"111", b"222"]]
+    assert published is not None
+    first_binding = provenance(published)["frame_bindings"][0]
+    assert first_binding["frame_id"] == original_frame_id
+    assert first_binding["perception_record_sha256"] == expected_record_sha256
+    assert (
+        first_binding["perception_record_sha256"]
+        != hashlib.sha256(canonical_json_bytes(first_observation)).hexdigest()
+    )
 
 
 @pytest.mark.parametrize(
@@ -427,6 +515,45 @@ def test_recorder_owns_buffered_pixels_when_capture_reuses_mutable_storage(
         (lambda value: value.update(mode="ARMED"), "only OBSERVE_ONLY"),
         (lambda value: value.update(would_action=True), "exactly false"),
         (lambda value: value.update(cat_count=2), "cat_count does not match"),
+        (
+            lambda value: value["observation"].update(observation_id=True),
+            "observation.observation_id must be a canonical identifier",
+        ),
+        (
+            lambda value: value["observation"].update(frame_id="../frame"),
+            "observation.frame_id must be a canonical identifier",
+        ),
+        (
+            lambda value: value.update(non_json=object()),
+            "contains a non-JSON value",
+        ),
+        (
+            lambda value: value.update(non_finite=float("nan")),
+            "contains a non-finite number",
+        ),
+        (
+            lambda value: value["observation"]["tracks"].append(
+                {
+                    "class": "CAT",
+                    "region_evidence": {"approach_overlap": 10**4000},
+                    "track_id": "huge-overlap",
+                }
+            ),
+            "integer is outside the interoperable safe range",
+        ),
+        (
+            lambda value: value.update(non_utf8_scalar="\ud800"),
+            "observation record is not canonical JSON",
+        ),
+        (
+            lambda value: value["observation"]["tracks"].extend(
+                [
+                    {"class": "PERSON", "track_id": "duplicate-track"},
+                    {"class": "PERSON", "track_id": "duplicate-track"},
+                ]
+            ),
+            "track_id values must be unique",
+        ),
     ],
 )
 def test_invalid_observation_is_rejected_before_buffering(
@@ -443,6 +570,67 @@ def test_invalid_observation_is_rejected_before_buffering(
     assert recorder.buffered_frame_count == 0
 
 
+@pytest.mark.parametrize(
+    ("mutation", "expected_error"),
+    [
+        (
+            lambda value: value.update(nested=_nested_json_value(MAX_OBSERVATION_JSON_DEPTH + 1)),
+            "depth limit",
+        ),
+        (
+            lambda value: value.update(nodes=[0] * MAX_OBSERVATION_JSON_NODES),
+            "node limit",
+        ),
+        (
+            lambda value: value.update(payload="x" * MAX_OBSERVATION_JSON_BYTES),
+            "canonical limit",
+        ),
+        (
+            lambda value: value["observation"].update(
+                tracks=[
+                    {"class": "PERSON", "track_id": f"person-{index}"}
+                    for index in range(MAX_OBSERVATION_TRACKS + 1)
+                ]
+            ),
+            "track limit",
+        ),
+    ],
+)
+def test_semantically_oversize_observation_is_rejected_before_buffering(
+    tmp_path: Path,
+    mutation: Any,
+    expected_error: str,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    item = frame(0)
+    event = observation(item)
+    mutation(event)
+
+    with pytest.raises(ObservationError, match=expected_error):
+        recorder.process(item, event)
+
+    assert recorder.buffered_frame_count == 0
+
+
+def _nested_json_value(depth: int) -> Any:
+    value: Any = 0
+    for _ in range(depth):
+        value = [value]
+    return value
+
+
+def test_cyclic_observation_is_rejected_before_buffering(tmp_path: Path) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    item = frame(0)
+    event = observation(item)
+    event["cycle"] = event
+
+    with pytest.raises(ObservationError, match="cyclic JSON value"):
+        recorder.process(item, event)
+
+    assert recorder.buffered_frame_count == 0
+
+
 def test_sequence_and_timestamp_must_be_strictly_increasing(tmp_path: Path) -> None:
     recorder, _ = make_recorder(tmp_path)
     first = frame(1, 100)
@@ -455,6 +643,60 @@ def test_sequence_and_timestamp_must_be_strictly_increasing(tmp_path: Path) -> N
     duplicate_time = frame(2, 100)
     with pytest.raises(ObservationError, match="timestamps must be strictly increasing"):
         recorder.process(duplicate_time, observation(duplicate_time))
+
+
+@pytest.mark.parametrize(
+    ("identifier", "expected_error"),
+    [
+        ("observation_id", "observation_id must be unique across the recorder stream"),
+        ("frame_id", "frame_id must be unique across the recorder stream"),
+    ],
+)
+def test_non_adjacent_ids_must_be_unique_across_the_full_stream(
+    tmp_path: Path,
+    identifier: str,
+    expected_error: str,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    first = frame(0)
+    first_observation = observation(first)
+    recorder.process(first, first_observation)
+    middle = frame(1)
+    recorder.process(middle, observation(middle))
+
+    duplicate = frame(2)
+    duplicate_observation = observation(duplicate)
+    duplicate_observation["observation"][identifier] = first_observation["observation"][identifier]
+    with pytest.raises(ObservationError, match=expected_error):
+        recorder.process(duplicate, duplicate_observation)
+
+    assert recorder.buffered_frame_count == 2
+    recorder.process(duplicate, observation(duplicate))
+    assert recorder.buffered_frame_count == 3
+
+
+def test_accepted_observation_limit_fails_before_identifier_sets_grow(tmp_path: Path) -> None:
+    config = RecorderConfig(
+        max_accepted_observations=2,
+        max_disk_bytes=100_000,
+    )
+    recorder, _ = make_recorder(tmp_path, config=config)
+    for sequence in range(2):
+        item = frame(sequence)
+        recorder.process(item, observation(item))
+
+    over_limit = frame(2)
+    with pytest.raises(RecorderStateError, match="max_accepted_observations"):
+        recorder.process(over_limit, observation(over_limit))
+
+    assert recorder.accepted_observation_count == 2
+    assert recorder.buffered_frame_count == 2
+
+
+@pytest.mark.parametrize("invalid_limit", [0, -1, True, 1.5])
+def test_accepted_observation_limit_must_be_a_positive_integer(invalid_limit: Any) -> None:
+    with pytest.raises(ValueError, match="max_accepted_observations must be a positive integer"):
+        RecorderConfig(max_accepted_observations=invalid_limit)
 
 
 def test_max_incident_retention_deletes_only_oldest_managed_clips(tmp_path: Path) -> None:
@@ -562,6 +804,274 @@ def test_restart_rejects_tampered_published_clip(
 
     assert published.directory.is_dir()
     assert not list((tmp_path / ".staging").iterdir())
+
+
+def test_restart_accepts_legacy_schema_v1_metadata_without_provenance(tmp_path: Path) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    clear = frame(1)
+    recorder.process(clear, observation(clear))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    metadata.pop("perception_provenance")
+    write_metadata(published.metadata_path, metadata)
+
+    IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+@pytest.mark.parametrize("invalid_schema_version", [True, 1.0])
+def test_restart_requires_schema_version_to_be_the_actual_integer_one(
+    tmp_path: Path,
+    invalid_schema_version: Any,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    metadata["schema_version"] = invalid_schema_version
+    write_metadata(published.metadata_path, metadata)
+
+    with pytest.raises(StorageError, match="mismatched metadata"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda value: value.update(mode="ARMED"),
+        lambda value: value["privacy"].update(network=True),
+        lambda value: value["privacy"].pop("display"),
+        lambda value: value["clip"].update(audio=True),
+    ],
+)
+def test_restart_revalidates_observe_only_privacy_metadata(
+    tmp_path: Path,
+    mutation: Any,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    mutation(metadata)
+    write_metadata(published.metadata_path, metadata)
+
+    with pytest.raises(StorageError, match="mismatched metadata"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+@pytest.mark.parametrize(
+    "injected_prefix",
+    [
+        '"mode":"OBSERVE_ONLY",',
+        '"unexpected":NaN,',
+        '"unexpected":1e9999,',
+        '"unexpected":"\\ud800",',
+    ],
+)
+def test_restart_strictly_decodes_stored_metadata(
+    tmp_path: Path,
+    injected_prefix: str,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    original = published.metadata_path.read_text(encoding="utf-8")
+    published.metadata_path.write_text(
+        "{" + injected_prefix + original.removeprefix("{"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(StorageError, match="invalid metadata"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+def test_restart_bounds_metadata_before_materializing_it(tmp_path: Path) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    published.metadata_path.write_bytes(b" " * (4 * 1024 * 1024 + 1))
+
+    with pytest.raises(StorageError, match="metadata exceeds the 4194304-byte limit"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=10_000_000))
+
+
+@pytest.mark.parametrize("artifact", ["metadata_path", "clip_path"])
+def test_restart_rejects_group_or_world_accessible_incident_files(
+    tmp_path: Path,
+    artifact: str,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    os.chmod(getattr(published, artifact), 0o640)
+
+    with pytest.raises(StorageError, match="permissions must not allow group or other access"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+def test_new_publication_requires_perception_provenance(tmp_path: Path) -> None:
+    config = RecorderConfig(max_disk_bytes=100_000)
+    store = IncidentStore(tmp_path, config)
+    item = frame(0)
+    encoder = FakeEncoder()
+    with pytest.raises(StorageError, match="has no perception provenance"):
+        store.publish(
+            incident_id="incident-0000000000000-0000000000",
+            frames=[item],
+            metadata={
+                "incident_id": "incident-0000000000000-0000000000",
+                "mode": "OBSERVE_ONLY",
+                "privacy": {"audio": False, "display": False, "network": False},
+                "record_type": "observation_clip",
+                "schema_version": 1,
+            },
+            encoder=encoder,
+            fps=10.0,
+        )
+
+    assert not encoder.calls
+    assert not list((tmp_path / "incidents").iterdir())
+    assert not list((tmp_path / ".staging").iterdir())
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda value: value.update(incident_id="incident-0000000002000-0000000020"),
+        lambda value: value.update(record_type="action_clip"),
+        lambda value: value.update(schema_version=True),
+        lambda value: value.update(mode="ARMED"),
+        lambda value: value["privacy"].update(network=True),
+    ],
+)
+def test_new_publication_rejects_poisoned_root_metadata_before_encoding(
+    tmp_path: Path,
+    mutation: Any,
+) -> None:
+    config = RecorderConfig(max_disk_bytes=1_000_000)
+    recorder, _ = make_recorder(tmp_path, config=config)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    metadata.pop("clip")
+    incident_id = "incident-0000000001000-0000000010"
+    metadata["incident_id"] = incident_id
+    mutation(metadata)
+    encoder = FakeEncoder()
+
+    with pytest.raises(StorageError, match="new incident has mismatched metadata"):
+        IncidentStore(tmp_path, config).publish(
+            incident_id=incident_id,
+            frames=[frame(0)],
+            metadata=metadata,
+            encoder=encoder,
+            fps=10.0,
+        )
+
+    assert not encoder.calls
+    assert not (tmp_path / "incidents" / incident_id).exists()
+
+
+@pytest.mark.parametrize(
+    "mismatched_frame",
+    [frame(1, 0), frame(0, 100)],
+)
+def test_new_publication_rejects_binding_that_disagrees_with_supplied_frame(
+    tmp_path: Path,
+    mismatched_frame: RecorderFrame,
+) -> None:
+    config = RecorderConfig(max_disk_bytes=1_000_000)
+    recorder, _ = make_recorder(tmp_path, config=config)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    metadata.pop("clip")
+    incident_id = "incident-0000000001000-0000000010"
+    metadata["incident_id"] = incident_id
+    encoder = FakeEncoder()
+
+    with pytest.raises(StorageError, match="binding disagrees with its supplied frame"):
+        IncidentStore(tmp_path, config).publish(
+            incident_id=incident_id,
+            frames=[mismatched_frame],
+            metadata=metadata,
+            encoder=encoder,
+            fps=10.0,
+        )
+
+    assert not encoder.calls
+    assert not (tmp_path / "incidents" / incident_id).exists()
+
+
+def test_restart_rejects_binding_tamper_when_stream_digest_is_unchanged(
+    tmp_path: Path,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    metadata["perception_provenance"]["frame_bindings"][0]["frame_id"] = "rewritten-frame"
+    write_metadata(published.metadata_path, metadata)
+
+    with pytest.raises(StorageError, match="perception stream SHA-256 mismatch"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+def test_provenance_hash_cannot_detect_coordinated_trusted_metadata_rewrite(
+    tmp_path: Path,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    provenance_metadata = metadata["perception_provenance"]
+    bindings = provenance_metadata["frame_bindings"]
+    bindings[0]["observation_id"] = "trusted-metadata-rewrite"
+    provenance_metadata["stream_sha256"] = recompute_binding_stream_sha256(bindings)
+    write_metadata(published.metadata_path, metadata)
+
+    IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
+
+
+def test_restart_rejects_duplicate_ids_even_with_recomputed_stream_digest(
+    tmp_path: Path,
+) -> None:
+    recorder, _ = make_recorder(tmp_path)
+    trigger = frame(0)
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
+    clear = frame(1)
+    recorder.process(clear, observation(clear))
+    published = recorder.close()
+    assert published is not None
+    metadata = json.loads(published.metadata_path.read_text(encoding="utf-8"))
+    provenance_metadata = metadata["perception_provenance"]
+    bindings = provenance_metadata["frame_bindings"]
+    bindings[1]["observation_id"] = bindings[0]["observation_id"]
+    provenance_metadata["stream_sha256"] = recompute_binding_stream_sha256(bindings)
+    write_metadata(published.metadata_path, metadata)
+
+    with pytest.raises(StorageError, match="duplicate frame binding IDs"):
+        IncidentStore(tmp_path, RecorderConfig(max_disk_bytes=1_000_000))
 
 
 def test_retention_fails_closed_before_deleting_tampered_incident(tmp_path: Path) -> None:
@@ -742,7 +1252,7 @@ def test_retention_refuses_to_delete_unrecognized_managed_looking_directory(
 def test_untrusted_source_names_never_become_paths(tmp_path: Path) -> None:
     recorder, _ = make_recorder(tmp_path / "root")
     trigger = frame(0, source_name="../../outside")
-    recorder.process(trigger, observation(trigger, cats=(("../../../cat", 0.5),)))
+    recorder.process(trigger, observation(trigger, cats=(("cat", 0.5),)))
     clear = frame(1, source_name="../../outside")
     recorder.process(clear, observation(clear))
     final_clear = frame(2, source_name="../../outside")

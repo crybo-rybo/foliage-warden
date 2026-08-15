@@ -16,13 +16,19 @@ from typing import Any
 
 from .encoding import ClipEncoder
 from .errors import StorageError
+from .jsonio import strict_json_loads
 from .types import RecorderConfig, RecorderFrame
 
 _INCIDENT_NAME = re.compile(r"incident-[0-9]{13}-[0-9]{10}\Z")
 _STAGING_NAME = re.compile(r"incident-[0-9]{13}-[0-9]{10}\.tmp-[A-Za-z0-9_-]+\Z")
 _SAFE_SUFFIX = re.compile(r"\.[a-z0-9]{1,10}\Z")
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}\Z")
+_IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\Z")
 _HASH_CHUNK_BYTES = 1024 * 1024
+_MAX_METADATA_BYTES = 4 * 1024 * 1024
+_MAX_SAFE_INTEGER = 9_007_199_254_740_991
+_RECORD_CANONICALIZATION = "JSON_SORTED_KEYS_COMPACT_UTF8_V1"
+_BINDING_STREAM_CANONICALIZATION = "JSONL_FRAME_BINDINGS_SORTED_KEYS_COMPACT_UTF8_V1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,9 +142,14 @@ class IncidentStore:
         metadata_path = path / "metadata.json"
         if metadata_path.is_symlink() or not metadata_path.is_file():
             raise StorageError(f"managed-looking incident {path.name} has no safe metadata")
+        metadata_bytes = self._read_bounded_regular(
+            metadata_path,
+            max_bytes=_MAX_METADATA_BYTES,
+            label=f"managed-looking incident {path.name} metadata",
+        )
         try:
-            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            metadata = strict_json_loads(metadata_bytes.decode("utf-8"))
+        except (UnicodeError, ValueError) as error:
             raise StorageError(
                 f"managed-looking incident {path.name} has invalid metadata"
             ) from error
@@ -148,9 +159,18 @@ class IncidentStore:
         clip_name = clip.get("filename")
         expected_byte_size = clip.get("byte_size")
         expected_sha256 = clip.get("sha256")
+        frame_count = clip.get("frame_count")
+        privacy = metadata.get("privacy")
         if (
             metadata.get("record_type") != "observation_clip"
             or metadata.get("incident_id") != path.name
+            or type(metadata.get("schema_version")) is not int
+            or metadata.get("schema_version") != 1
+            or metadata.get("mode") != "OBSERVE_ONLY"
+            or not isinstance(privacy, dict)
+            or set(privacy) != {"audio", "display", "network"}
+            or any(value is not False for value in privacy.values())
+            or clip.get("audio") is not False
         ):
             raise StorageError(f"managed-looking incident {path.name} has mismatched metadata")
         if (
@@ -168,6 +188,14 @@ class IncidentStore:
             raise StorageError(f"managed-looking incident {path.name} has invalid clip byte_size")
         if not isinstance(expected_sha256, str) or not _SHA256_HEX.fullmatch(expected_sha256):
             raise StorageError(f"managed-looking incident {path.name} has invalid clip SHA-256")
+        if type(frame_count) is not int or frame_count <= 0:
+            raise StorageError(f"managed-looking incident {path.name} has invalid frame_count")
+        self._validate_perception_provenance(
+            path.name,
+            metadata,
+            frame_count,
+            required=False,
+        )
         actual_byte_size, actual_sha256 = self._file_identity(
             clip_path,
             label=f"managed-looking incident {path.name} clip",
@@ -176,6 +204,176 @@ class IncidentStore:
             raise StorageError(f"managed-looking incident {path.name} clip byte_size mismatch")
         if actual_sha256 != expected_sha256:
             raise StorageError(f"managed-looking incident {path.name} clip SHA-256 mismatch")
+
+    @staticmethod
+    def _validate_perception_provenance(
+        incident_name: str,
+        metadata: dict[str, Any],
+        frame_count: int,
+        *,
+        required: bool,
+        frames: Sequence[RecorderFrame] | None = None,
+    ) -> None:
+        if "perception_provenance" not in metadata:
+            if required:
+                raise StorageError(
+                    f"managed-looking incident {incident_name} has no perception provenance"
+                )
+            return
+        provenance = metadata.get("perception_provenance")
+        expected_provenance_keys = {
+            "binding_stream_canonicalization",
+            "frame_bindings",
+            "record_canonicalization",
+            "record_count",
+            "stream_sha256",
+        }
+        if not isinstance(provenance, dict) or set(provenance) != expected_provenance_keys:
+            raise StorageError(
+                f"managed-looking incident {incident_name} has invalid perception provenance"
+            )
+        if provenance["record_canonicalization"] != _RECORD_CANONICALIZATION or (
+            provenance["binding_stream_canonicalization"] != _BINDING_STREAM_CANONICALIZATION
+        ):
+            raise StorageError(
+                f"managed-looking incident {incident_name} has unknown provenance canonicalization"
+            )
+        record_count = provenance["record_count"]
+        bindings = provenance["frame_bindings"]
+        if (
+            type(record_count) is not int
+            or record_count != frame_count
+            or not isinstance(bindings, list)
+            or len(bindings) != frame_count
+        ):
+            raise StorageError(
+                f"managed-looking incident {incident_name} provenance count mismatch"
+            )
+        expected_binding_keys = {
+            "captured_at_ms",
+            "encoded_frame_index",
+            "frame_id",
+            "observation_id",
+            "perception_record_sha256",
+            "sequence",
+        }
+        digest = hashlib.sha256()
+        previous_order: tuple[int, int] | None = None
+        observation_ids: set[str] = set()
+        frame_ids: set[str] = set()
+        for encoded_frame_index, binding in enumerate(bindings):
+            if not isinstance(binding, dict) or set(binding) != expected_binding_keys:
+                raise StorageError(
+                    f"managed-looking incident {incident_name} has invalid frame binding"
+                )
+            sequence = binding["sequence"]
+            captured_at_ms = binding["captured_at_ms"]
+            if (
+                type(binding["encoded_frame_index"]) is not int
+                or binding["encoded_frame_index"] != encoded_frame_index
+                or type(sequence) is not int
+                or not 0 <= sequence <= _MAX_SAFE_INTEGER
+                or type(captured_at_ms) is not int
+                or not 0 <= captured_at_ms <= _MAX_SAFE_INTEGER
+                or not isinstance(binding["observation_id"], str)
+                or _IDENTIFIER.fullmatch(binding["observation_id"]) is None
+                or not isinstance(binding["frame_id"], str)
+                or _IDENTIFIER.fullmatch(binding["frame_id"]) is None
+                or not isinstance(binding["perception_record_sha256"], str)
+                or _SHA256_HEX.fullmatch(binding["perception_record_sha256"]) is None
+            ):
+                raise StorageError(
+                    f"managed-looking incident {incident_name} has invalid frame binding"
+                )
+            observation_id = binding["observation_id"]
+            frame_id = binding["frame_id"]
+            if observation_id in observation_ids or frame_id in frame_ids:
+                raise StorageError(
+                    f"managed-looking incident {incident_name} has duplicate frame binding IDs"
+                )
+            observation_ids.add(observation_id)
+            frame_ids.add(frame_id)
+            if frames is not None:
+                frame = frames[encoded_frame_index]
+                if sequence != frame.sequence or captured_at_ms != frame.captured_at_ms:
+                    raise StorageError(
+                        f"managed-looking incident {incident_name} frame binding "
+                        "disagrees with its supplied frame"
+                    )
+            order = (sequence, captured_at_ms)
+            if previous_order is not None and (
+                sequence <= previous_order[0] or captured_at_ms <= previous_order[1]
+            ):
+                raise StorageError(
+                    f"managed-looking incident {incident_name} has unordered frame bindings"
+                )
+            previous_order = order
+            digest.update(
+                json.dumps(
+                    binding,
+                    allow_nan=False,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ).encode("utf-8")
+            )
+            digest.update(b"\n")
+        timeline = metadata.get("timeline")
+        if not isinstance(timeline, dict) or (
+            bindings[0]["sequence"] != timeline.get("start_sequence")
+            or bindings[-1]["sequence"] != timeline.get("end_sequence")
+            or bindings[0]["captured_at_ms"] != timeline.get("start_captured_at_ms")
+            or bindings[-1]["captured_at_ms"] != timeline.get("end_captured_at_ms")
+        ):
+            raise StorageError(
+                f"managed-looking incident {incident_name} provenance timeline mismatch"
+            )
+        stream_sha256 = provenance["stream_sha256"]
+        if not isinstance(stream_sha256, str) or not _SHA256_HEX.fullmatch(stream_sha256):
+            raise StorageError(
+                f"managed-looking incident {incident_name} has invalid provenance SHA-256"
+            )
+        if digest.hexdigest() != stream_sha256:
+            raise StorageError(
+                f"managed-looking incident {incident_name} perception stream SHA-256 mismatch"
+            )
+
+    @staticmethod
+    def _verify_private_regular(identity: os.stat_result, *, label: str) -> None:
+        if not stat.S_ISREG(identity.st_mode):
+            raise StorageError(f"{label} is not a regular file")
+        if stat.S_IMODE(identity.st_mode) & 0o077:
+            raise StorageError(f"{label} permissions must not allow group or other access")
+        get_effective_uid = getattr(os, "geteuid", None)
+        if get_effective_uid is not None and identity.st_uid != get_effective_uid():
+            raise StorageError(f"{label} must be owned by the current user")
+
+    @staticmethod
+    def _read_bounded_regular(path: Path, *, max_bytes: int, label: str) -> bytes:
+        descriptor: int | None = None
+        result = bytearray()
+        try:
+            descriptor = os.open(
+                path,
+                os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
+            )
+            identity = os.fstat(descriptor)
+            IncidentStore._verify_private_regular(identity, label=label)
+            if identity.st_size > max_bytes:
+                raise StorageError(f"{label} exceeds the {max_bytes}-byte limit")
+            while chunk := os.read(
+                descriptor,
+                min(_HASH_CHUNK_BYTES, max_bytes + 1 - len(result)),
+            ):
+                result.extend(chunk)
+                if len(result) > max_bytes:
+                    raise StorageError(f"{label} exceeds the {max_bytes}-byte limit")
+        except OSError as error:
+            raise StorageError(f"could not read {label}: {error}") from error
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+        return bytes(result)
 
     @staticmethod
     def _file_identity(path: Path, *, label: str) -> tuple[int, str]:
@@ -187,8 +385,7 @@ class IncidentStore:
                 path,
                 os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
             )
-            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-                raise StorageError(f"{label} is not a regular file")
+            IncidentStore._verify_private_regular(os.fstat(descriptor), label=label)
             while chunk := os.read(descriptor, _HASH_CHUNK_BYTES):
                 byte_size += len(chunk)
                 digest.update(chunk)
@@ -239,6 +436,27 @@ class IncidentStore:
         self._verify_layout()
         if not _INCIDENT_NAME.fullmatch(incident_id):
             raise StorageError("incident_id is not a recorder-generated identifier")
+        if not frames:
+            raise StorageError("cannot publish an incident without frames")
+        privacy = metadata.get("privacy")
+        if (
+            metadata.get("record_type") != "observation_clip"
+            or metadata.get("incident_id") != incident_id
+            or type(metadata.get("schema_version")) is not int
+            or metadata.get("schema_version") != 1
+            or metadata.get("mode") != "OBSERVE_ONLY"
+            or not isinstance(privacy, dict)
+            or set(privacy) != {"audio", "display", "network"}
+            or any(value is not False for value in privacy.values())
+        ):
+            raise StorageError("new incident has mismatched metadata")
+        self._validate_perception_provenance(
+            incident_id,
+            metadata,
+            len(frames),
+            required=True,
+            frames=frames,
+        )
         if not _SAFE_SUFFIX.fullmatch(encoder.suffix):
             raise StorageError("encoder suffix must be a short lowercase file extension")
         destination = self.incidents_dir / incident_id
@@ -256,6 +474,7 @@ class IncidentStore:
             encoding = encoder.encode(frames, clip_path, fps=fps)
             if not clip_path.is_file() or clip_path.is_symlink():
                 raise StorageError("encoder did not produce a regular clip file")
+            os.chmod(clip_path, 0o600)
             clip_bytes, clip_sha256 = self._file_identity(clip_path, label="encoded clip")
             if clip_bytes <= 0:
                 raise StorageError("encoder produced an empty clip")
@@ -274,8 +493,12 @@ class IncidentStore:
                     "width": encoding.width,
                 },
             }
-            metadata_path.write_bytes(self._stable_json(complete_metadata))
-            os.chmod(clip_path, 0o600)
+            metadata_bytes = self._stable_json(complete_metadata)
+            if len(metadata_bytes) > _MAX_METADATA_BYTES:
+                raise StorageError(
+                    f"incident metadata exceeds the {_MAX_METADATA_BYTES}-byte limit"
+                )
+            metadata_path.write_bytes(metadata_bytes)
             os.chmod(metadata_path, 0o600)
             with clip_path.open("rb") as stream:
                 os.fsync(stream.fileno())

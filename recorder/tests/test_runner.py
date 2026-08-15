@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from foliage_warden_recorder import (
     RecorderFrame,
     run_paired,
 )
+from foliage_warden_recorder.adapters import JsonlObservations
 
 
 class Source:
@@ -63,6 +65,8 @@ def make_observation(item: RecorderFrame, *, trigger: bool = False) -> dict:
         "observation": {
             "camera_id": item.camera_id,
             "captured_at_ms": item.captured_at_ms,
+            "frame_id": f"{item.camera_id}:frame:{item.sequence:08d}",
+            "observation_id": f"{item.camera_id}:observation:{item.sequence:08d}",
             "tracks": tracks,
         },
         "record_type": "perception_observation",
@@ -115,3 +119,39 @@ def test_normal_source_end_publishes_active_incident(tmp_path: Path) -> None:
     assert source.closed
     assert len(published) == 1
     assert published[0].clip_path.read_bytes() == b"clip"
+
+
+@pytest.mark.parametrize(
+    ("record", "expected_error"),
+    [
+        ('{"value":1,"value":2}\n', "duplicate object key 'value'"),
+        ('{"value":NaN}\n', "non-finite number NaN"),
+        ('{"value":Infinity}\n', "non-finite number Infinity"),
+        ('{"value":1e9999}\n', "non-finite number 1e9999"),
+        ('{"value":"\\ud800"}\n', "string is not valid UTF-8"),
+    ],
+)
+def test_jsonl_parser_rejects_ambiguous_non_strict_json(
+    record: str,
+    expected_error: str,
+) -> None:
+    with pytest.raises(ObservationError, match=expected_error):
+        next(iter(JsonlObservations(StringIO(record))))
+
+
+def test_jsonl_parser_bounds_record_bytes_before_decoding() -> None:
+    record = '{"value":"' + "x" * 64 + '"}\n'
+    with pytest.raises(ObservationError, match="exceeds 32 UTF-8 bytes"):
+        next(iter(JsonlObservations(StringIO(record), max_record_bytes=32)))
+
+
+def test_jsonl_parser_rejects_excessive_nesting_on_all_supported_pythons() -> None:
+    record = '{"value":' + "[" * 1_500 + "0" + "]" * 1_500 + "}\n"
+    with pytest.raises(ObservationError, match=r"decoder limit|depth limit"):
+        next(iter(JsonlObservations(StringIO(record))))
+
+
+@pytest.mark.parametrize("invalid_limit", [0, -1, True, 1.5])
+def test_jsonl_parser_requires_a_positive_byte_limit(invalid_limit: object) -> None:
+    with pytest.raises(ValueError, match="max_record_bytes must be a positive integer"):
+        JsonlObservations(StringIO("{}\n"), max_record_bytes=invalid_limit)  # type: ignore[arg-type]

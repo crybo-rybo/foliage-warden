@@ -29,6 +29,8 @@ def _observation(sequence: int, *, trigger: bool) -> dict[str, object]:
         "observation": {
             "camera_id": "camera-1",
             "captured_at_ms": sequence * 100,
+            "frame_id": f"camera-1:frame:{sequence:08d}",
+            "observation_id": f"camera-1:observation:{sequence:08d}",
             "tracks": tracks,
         },
         "record_type": "perception_observation",
@@ -90,6 +92,12 @@ def test_real_opencv_cli_writes_one_silent_bounded_clip(
     assert metadata["privacy"] == {"audio": False, "display": False, "network": False}
     assert metadata["timeline"]["start_sequence"] == 2
     assert metadata["timeline"]["end_sequence"] == 7
+    provenance = metadata["perception_provenance"]
+    assert provenance["record_count"] == metadata["clip"]["frame_count"] == 6
+    assert [binding["encoded_frame_index"] for binding in provenance["frame_bindings"]] == list(
+        range(6)
+    )
+    assert [binding["sequence"] for binding in provenance["frame_bindings"]] == list(range(2, 8))
     assert metadata["clip"]["byte_size"] == clip.stat().st_size
     assert metadata["clip"]["sha256"] == hashlib.sha256(clip.read_bytes()).hexdigest()
 
@@ -102,4 +110,4 @@ def test_real_opencv_cli_writes_one_silent_bounded_clip(
         assert frame.shape == (48, 64, 3)
         decoded += 1
     capture.release()
-    assert decoded == 6
+    assert decoded == provenance["record_count"] == 6

@@ -73,6 +73,8 @@ for sequence in range(10):
         "observation": {
             "camera_id": "camera-1",
             "captured_at_ms": sequence * 100,
+            "frame_id": f"camera-1:frame:{sequence:08d}",
+            "observation_id": f"camera-1:observation:{sequence:08d}",
             "tracks": tracks,
         },
         "record_type": "perception_observation",
@@ -107,6 +109,14 @@ the rolling buffer, the recorder requires:
   match the paired frame;
 - sequence and capture time are strictly increasing, and source identity does
   not change;
+- nested `observation_id`, `frame_id`, camera ID, and track IDs are canonical
+  identifiers; observation and frame IDs are unique across the full recorder
+  process, and track IDs are unique within one observation;
+- the complete record contains only strict JSON values with finite numbers and
+  interoperable-range integers; the JSONL adapter also rejects duplicate object
+  keys and non-standard `NaN`/infinity literals;
+- one JSONL record is at most 1 MiB of UTF-8, and its semantic JSON is limited
+  to 32 levels, 20,000 values, and 512 tracks;
 - `cat_count` agrees with the `CAT` tracks; and
 - every cat has finite approach overlap in `[0, 1]`.
 
@@ -129,6 +139,7 @@ CLI:
 | Maximum clip duration | 15 s | One clip, then suppress until the cat clears |
 | Active clip frame cap | 600 frames | Clip terminates before another frame could exceed the cap |
 | Active decoded-pixel cap | 512 MiB | Clip terminates before another frame could exceed the cap |
+| Accepted observations | 1,000,000 | Session rejects another record before lifetime identity state can grow further |
 | Retained incidents | 100 | Oldest managed incident is removed first |
 | Recorder disk budget | 5 GiB | Oldest managed incidents are removed first |
 
@@ -145,6 +156,15 @@ clear. Capture backends may reuse mutable decode buffers: the recorder copies
 every retained frame so later writes cannot alter pre-event history or an
 active clip.
 
+Exact full-stream ID uniqueness requires retaining the accepted observation
+and frame IDs for the recorder process lifetime. Each ID is capped at 128 ASCII
+identifier characters, and `max_accepted_observations` bounds each lifetime set
+to 1,000,000 entries by default. The constructor and
+`--max-accepted-observations` can select a different positive finite cap. Once
+the cap is reached, the recorder rejects another observation before validation
+or allocation; rotate to a new recorder process/session explicitly. Decoded
+camera pixels remain bounded independently by the four limits above.
+
 If one encoded incident exceeds the disk budget, it is discarded instead of
 being published. Retention only recognizes recorder-generated incident names
 inside the explicit output root; unrelated files are never retention targets.
@@ -160,10 +180,44 @@ alteration only while metadata remains trusted; it is not a signature or proof
 of origin. Files are mode `0600`. The explicit output root and managed
 directories are forced to mode `0700` during initialization; later group- or
 world-accessible mode changes are rejected before encoding or retention.
+Stored metadata is capped at 4 MiB and read through a no-follow descriptor.
+Duplicate keys, non-finite numbers, and non-interoperable integers are rejected.
+Restart also revalidates schema version, `OBSERVE_ONLY`, silent clip metadata,
+and the exact all-false audio, display, and network privacy flags. Provenance
+remains optional only for schema-v1 incident directories written before
+provenance was introduced. Metadata and clip descriptors must remain regular,
+owned by the current user where the platform exposes ownership, and inaccessible
+to group and other users.
 
-The metadata intentionally stores only source identity, frame/timestamp
-boundaries, triggering track IDs/overlaps, encoding facts, and privacy flags.
-It does not serialize full per-frame detections. Clip content is still
-sensitive camera data: keep the output directory local, restrict access, set a
-retention budget appropriate to the site, and obtain consent before collecting
-real-world footage.
+Every newly published incident also has `perception_provenance`. Its
+`record_count` equals `clip.frame_count`, and its `frame_bindings` are ordered by
+contiguous `encoded_frame_index` from zero. Each binding records the exact
+paired perception sequence, `captured_at_ms`, `observation_id`, `frame_id`, and
+`perception_record_sha256`. Pre-event eviction, active limits, retrigger
+coalescing, and finalization move a frame and its immutable binding together.
+Before encoding, publication compares every binding's sequence and capture
+timestamp to the corresponding supplied frame.
+
+The digest bytes are defined exactly:
+
+- `perception_record_sha256` is SHA-256 over the accepted perception record
+  rendered as UTF-8 JSON with lexicographically sorted object keys, compact
+  separators (`,` and `:`), JSON `false`/`true`/`null` spellings, and no trailing
+  newline. The metadata labels this `JSON_SORTED_KEYS_COMPACT_UTF8_V1`.
+- `stream_sha256` is SHA-256 over every ordered frame-binding object rendered
+  with that same canonical JSON encoding, followed by exactly one LF byte
+  (`0x0a`) after every object, including the last. The metadata labels this
+  `JSONL_FRAME_BINDINGS_SORTED_KEYS_COMPACT_UTF8_V1`.
+
+Full perception records are not copied into clip metadata. Existing schema-v1
+incident directories created before provenance was added may omit this field
+and remain restart/retention compatible; all new publications require and
+validate it.
+
+These hashes detect accidental record/binding mismatch only while the metadata
+is trusted. They are not signatures, do not authenticate camera pixels, and do
+not prove that an encoded frame visually corresponds to the named perception
+record. An actor able to rewrite metadata can rewrite both bindings and hashes.
+Clip content remains sensitive camera data: keep the output directory local,
+restrict access, set a retention budget appropriate to the site, and obtain
+consent before collecting real-world footage.

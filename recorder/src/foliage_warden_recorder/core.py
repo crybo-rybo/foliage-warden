@@ -8,10 +8,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .encoding import ClipEncoder
-from .errors import RecorderStateError
+from .errors import ObservationError, RecorderStateError
 from .observation import (
+    BINDING_STREAM_CANONICALIZATION,
+    RECORD_CANONICALIZATION,
     ObservationOrder,
+    PerceptionBinding,
     TriggerEvidence,
+    binding_stream_sha256,
     validate_and_extract_trigger,
 )
 from .storage import IncidentStore, PublishedIncident
@@ -34,9 +38,27 @@ class _TriggerSample:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class _PairedFrame:
+    frame: RecorderFrame
+    binding: PerceptionBinding
+
+    @property
+    def sequence(self) -> int:
+        return self.frame.sequence
+
+    @property
+    def captured_at_ms(self) -> int:
+        return self.frame.captured_at_ms
+
+    @property
+    def pixel_bytes(self) -> int:
+        return self.frame.pixel_bytes
+
+
 @dataclass(slots=True)
 class _Incident:
-    frames: list[RecorderFrame]
+    frames: list[_PairedFrame]
     pixel_bytes: int
     first_trigger: _TriggerSample
     last_trigger_ms: int
@@ -56,11 +78,13 @@ class IncidentRecorder:
         self._store = store
         self._encoder = encoder
         self._config = config
-        self._prebuffer: deque[RecorderFrame] = deque()
+        self._prebuffer: deque[_PairedFrame] = deque()
         self._prebuffer_bytes = 0
         self._active: _Incident | None = None
         self._suppressed_until_clear = False
         self._previous: ObservationOrder | None = None
+        self._seen_observation_ids: set[str] = set()
+        self._seen_frame_ids: set[str] = set()
         self._closed = False
 
     @property
@@ -87,6 +111,10 @@ class IncidentRecorder:
     def suppressed_until_clear(self) -> bool:
         return self._suppressed_until_clear
 
+    @property
+    def accepted_observation_count(self) -> int:
+        return len(self._seen_observation_ids)
+
     def _drop_oldest_prebuffer(self) -> None:
         dropped = self._prebuffer.popleft()
         self._prebuffer_bytes -= dropped.pixel_bytes
@@ -95,10 +123,10 @@ class IncidentRecorder:
         self._prebuffer.clear()
         self._prebuffer_bytes = 0
 
-    def _append_prebuffer(self, frame: RecorderFrame) -> None:
-        self._prebuffer.append(frame)
-        self._prebuffer_bytes += frame.pixel_bytes
-        cutoff = frame.captured_at_ms - self._config.pre_event_ms
+    def _append_prebuffer(self, paired: _PairedFrame) -> None:
+        self._prebuffer.append(paired)
+        self._prebuffer_bytes += paired.pixel_bytes
+        cutoff = paired.captured_at_ms - self._config.pre_event_ms
         while self._prebuffer and self._prebuffer[0].captured_at_ms < cutoff:
             self._drop_oldest_prebuffer()
         while self._prebuffer and (
@@ -116,13 +144,13 @@ class IncidentRecorder:
             trigger.maximum_approach_overlap,
         )
 
-    def _start(self, frame: RecorderFrame, trigger: TriggerEvidence) -> None:
-        sample = self._sample(frame, trigger)
+    def _start(self, paired: _PairedFrame, trigger: TriggerEvidence) -> None:
+        sample = self._sample(paired.frame, trigger)
         frames = list(self._prebuffer)
         pixel_bytes = self._prebuffer_bytes
-        if not frames or frames[-1].sequence != frame.sequence:
-            frames = [frame]
-            pixel_bytes = frame.pixel_bytes
+        if not frames or frames[-1].sequence != paired.sequence:
+            frames = [paired]
+            pixel_bytes = paired.pixel_bytes
         while len(frames) > 1 and (
             len(frames) > self._config.max_active_frames
             or pixel_bytes > self._config.max_active_bytes
@@ -139,20 +167,31 @@ class IncidentRecorder:
             frames=frames,
             pixel_bytes=pixel_bytes,
             first_trigger=sample,
-            last_trigger_ms=frame.captured_at_ms,
+            last_trigger_ms=paired.captured_at_ms,
             last_observation_triggered=True,
             trigger_samples=[sample],
         )
 
     def _metadata(self, incident: _Incident, termination: str) -> dict[str, Any]:
-        first = incident.frames[0]
-        last = incident.frames[-1]
+        first = incident.frames[0].frame
+        last = incident.frames[-1].frame
         trigger = incident.first_trigger
         incident_id = f"incident-{trigger.captured_at_ms:013d}-{trigger.sequence:010d}"
+        bindings = [paired.binding for paired in incident.frames]
         return {
             "incident_id": incident_id,
             "mode": "OBSERVE_ONLY",
             "privacy": {"audio": False, "display": False, "network": False},
+            "perception_provenance": {
+                "binding_stream_canonicalization": BINDING_STREAM_CANONICALIZATION,
+                "frame_bindings": [
+                    binding.to_dict(encoded_frame_index)
+                    for encoded_frame_index, binding in enumerate(bindings)
+                ],
+                "record_canonicalization": RECORD_CANONICALIZATION,
+                "record_count": len(bindings),
+                "stream_sha256": binding_stream_sha256(bindings),
+            },
             "record_type": "observation_clip",
             "resource_limits": {
                 "max_active_bytes": self._config.max_active_bytes,
@@ -191,7 +230,7 @@ class IncidentRecorder:
         metadata = self._metadata(incident, termination)
         return self._store.publish(
             incident_id=metadata["incident_id"],
-            frames=incident.frames,
+            frames=[paired.frame for paired in incident.frames],
             metadata=metadata,
             encoder=self._encoder,
             fps=self._config.nominal_fps,
@@ -204,19 +243,29 @@ class IncidentRecorder:
     ) -> PublishedIncident | None:
         if self._closed:
             raise RecorderStateError("recorder is closed")
-        order, trigger = validate_and_extract_trigger(
+        if self.accepted_observation_count >= self._config.max_accepted_observations:
+            raise RecorderStateError(
+                "recorder reached max_accepted_observations; rotate the bounded session"
+            )
+        order, trigger, binding = validate_and_extract_trigger(
             observation,
             frame,
             previous=self._previous,
             minimum_approach_overlap=self._config.minimum_approach_overlap,
         )
+        if binding.observation_id in self._seen_observation_ids:
+            raise ObservationError("observation_id must be unique across the recorder stream")
+        if binding.frame_id in self._seen_frame_ids:
+            raise ObservationError("frame_id must be unique across the recorder stream")
+        self._seen_observation_ids.add(binding.observation_id)
+        self._seen_frame_ids.add(binding.frame_id)
         self._previous = order
 
         if self._suppressed_until_clear:
             if not trigger.active:
                 self._suppressed_until_clear = False
                 if frame.pixel_bytes <= self._config.max_buffer_bytes:
-                    self._append_prebuffer(frame.owned_copy())
+                    self._append_prebuffer(_PairedFrame(frame.owned_copy(), binding))
             return None
 
         if self._active is None:
@@ -224,12 +273,12 @@ class IncidentRecorder:
                 self._config.max_buffer_bytes,
                 self._config.max_active_bytes if trigger.active else 0,
             ):
-                owned = frame.owned_copy()
-                self._append_prebuffer(owned)
+                paired = _PairedFrame(frame.owned_copy(), binding)
+                self._append_prebuffer(paired)
             else:
-                owned = frame
+                paired = _PairedFrame(frame, binding)
             if trigger.active:
-                self._start(owned, trigger)
+                self._start(paired, trigger)
             return None
 
         incident = self._active
@@ -239,7 +288,7 @@ class IncidentRecorder:
                 self._suppressed_until_clear = True
             else:
                 if frame.pixel_bytes <= self._config.max_buffer_bytes:
-                    self._append_prebuffer(frame.owned_copy())
+                    self._append_prebuffer(_PairedFrame(frame.owned_copy(), binding))
             return published
 
         if (
@@ -248,33 +297,33 @@ class IncidentRecorder:
             and frame.captured_at_ms - incident.last_trigger_ms > self._config.post_event_ms
         ):
             published = self._finalize("post_event_elapsed")
-            owned = frame.owned_copy()
-            self._append_prebuffer(owned)
-            self._start(owned, trigger)
+            paired = _PairedFrame(frame.owned_copy(), binding)
+            self._append_prebuffer(paired)
+            self._start(paired, trigger)
             return published
 
-        owned = frame.owned_copy()
-        frame_bytes = owned.pixel_bytes
+        paired = _PairedFrame(frame.owned_copy(), binding)
+        frame_bytes = paired.pixel_bytes
         if len(incident.frames) >= self._config.max_active_frames:
             published = self._finalize("max_active_frames")
             if trigger.active:
                 self._suppressed_until_clear = True
             elif frame_bytes <= self._config.max_buffer_bytes:
-                self._append_prebuffer(owned)
+                self._append_prebuffer(paired)
             return published
         if incident.pixel_bytes + frame_bytes > self._config.max_active_bytes:
             published = self._finalize("max_active_bytes")
             if trigger.active:
                 self._suppressed_until_clear = True
             elif frame_bytes <= self._config.max_buffer_bytes:
-                self._append_prebuffer(owned)
+                self._append_prebuffer(paired)
             return published
 
-        incident.frames.append(owned)
+        incident.frames.append(paired)
         incident.pixel_bytes += frame_bytes
         incident.last_observation_triggered = trigger.active
         if trigger.active:
-            sample = self._sample(owned, trigger)
+            sample = self._sample(paired.frame, trigger)
             incident.trigger_samples.append(sample)
             incident.last_trigger_ms = frame.captured_at_ms
 

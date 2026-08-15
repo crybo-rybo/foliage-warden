@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import importlib
-import json
 import math
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, TextIO
 
 from .errors import ObservationError, RecorderError
+from .jsonio import StrictJsonError, strict_json_loads
+from .observation import MAX_OBSERVATION_JSON_BYTES, validate_json_value
 from .types import RecorderFrame
 
 
@@ -71,19 +72,51 @@ class LocalVideoSource:
 
 
 class JsonlObservations:
-    def __init__(self, stream: TextIO) -> None:
+    def __init__(
+        self,
+        stream: TextIO,
+        *,
+        max_record_bytes: int = MAX_OBSERVATION_JSON_BYTES,
+    ) -> None:
+        if type(max_record_bytes) is not int or max_record_bytes <= 0:
+            raise ValueError("max_record_bytes must be a positive integer")
         self._stream = stream
+        self._max_record_bytes = max_record_bytes
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
-        for line_number, line in enumerate(self._stream, start=1):
-            if not line.strip():
+        line_number = 0
+        # readline's bound is measured in decoded characters, not UTF-8 bytes.
+        # Reading at most byte_limit + 3 characters still bounds temporary memory
+        # while leaving room for CRLF and an over-limit sentinel character.
+        character_limit = self._max_record_bytes + 3
+        while line := self._stream.readline(character_limit):
+            line_number += 1
+            if not line.endswith("\n") and len(line) == character_limit:
+                raise ObservationError(
+                    f"JSONL record at line {line_number} exceeds "
+                    f"{self._max_record_bytes} UTF-8 bytes"
+                )
+            payload = line.removesuffix("\n").removesuffix("\r")
+            try:
+                payload_bytes = payload.encode("utf-8")
+            except UnicodeEncodeError as error:
+                raise ObservationError(
+                    f"invalid JSON at line {line_number}: text is not valid UTF-8"
+                ) from error
+            if len(payload_bytes) > self._max_record_bytes:
+                raise ObservationError(
+                    f"JSONL record at line {line_number} exceeds "
+                    f"{self._max_record_bytes} UTF-8 bytes"
+                )
+            if not payload.strip():
                 raise ObservationError(f"blank JSONL record at line {line_number}")
             try:
-                value = json.loads(line)
-            except json.JSONDecodeError as error:
-                raise ObservationError(
-                    f"invalid JSON at line {line_number}: {error.msg}"
-                ) from error
+                value = strict_json_loads(payload)
+            except StrictJsonError as error:
+                raise ObservationError(f"invalid JSON at line {line_number}: {error}") from error
+            except ValueError as error:
+                raise ObservationError(f"invalid JSON at line {line_number}: {error}") from error
             if not isinstance(value, dict):
                 raise ObservationError(f"JSONL line {line_number} must contain an object")
+            validate_json_value(value)
             yield value
