@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foliage-warden.local/schemas/common.schema.json",
+  "title": "Foliage Warden common data types",
+  "description": "Version 1 common types shared by configuration, deterministic scenarios, and audit records.",
+  "$defs": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "monotonic_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "normalized_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "y": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "normalized_polygon": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/normalized_point"}
+    },
+    "normalized_bbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "y": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "width": {"type": "number", "exclusiveMinimum": 0.0, "maximum": 1.0},
+        "height": {"type": "number", "exclusiveMinimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "policy_state": {
+      "type": "string",
+      "enum": [
+        "DISARMED",
+        "MONITORING",
+        "TRACKING",
+        "CONFIRMING",
+        "AIMING",
+        "READY",
+        "BURST",
+        "COOLDOWN",
+        "FAULT"
+      ]
+    },
+    "behavior_label": {
+      "type": "string",
+      "enum": ["CLEAR", "EATING", "DIGGING", "UNKNOWN"]
+    },
+    "raw_behavior_label": {
+      "type": "string",
+      "enum": ["PASSING", "SNIFFING", "EATING", "DIGGING", "OTHER_UNKNOWN"]
+    },
+    "behavior_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["CLEAR", "EATING", "DIGGING", "UNKNOWN"],
+      "properties": {
+        "CLEAR": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "EATING": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "DIGGING": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "UNKNOWN": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "STARTUP_DISARMED",
+        "MANUAL_ARM",
+        "MANUAL_DISARM",
+        "ESTOP",
+        "NO_CAT_IN_ZONE",
+        "BEHAVIOR_CLEAR",
+        "BEHAVIOR_UNKNOWN",
+        "BEHAVIOR_NOT_PERSISTENT",
+        "EATING_CONFIRMED",
+        "DIGGING_CONFIRMED",
+        "PERSON_PRESENT",
+        "MULTIPLE_CATS",
+        "AMBIGUOUS_TRACK",
+        "FRAME_STALE",
+        "TRACK_TOO_YOUNG",
+        "POOR_TRACK",
+        "NO_FIRE_INTERSECTION",
+        "NO_SAFE_PRESET",
+        "HARDWARE_NOT_READY",
+        "CAMERA_DISCONNECTED",
+        "CAMERA_TIMEOUT",
+        "PROCESS_RESTART",
+        "COOLDOWN_ACTIVE",
+        "INCIDENT_ALREADY_ACTIONED",
+        "COMMAND_ACKNOWLEDGED",
+        "COMMAND_DENIED",
+        "COMMAND_ACK_TIMEOUT",
+        "DUPLICATE_COMMAND_ID",
+        "WATCHDOG_TIMEOUT",
+        "TRANSPORT_ERROR",
+        "CONFIGURATION_ERROR",
+        "SHADOW_ONLY",
+        "ACTUATION_DISABLED"
+      ]
+    },
+    "action_command_name": {
+      "type": "string",
+      "enum": [
+        "ARM",
+        "DISARM",
+        "HOME",
+        "GOTO_PRESET",
+        "PAN_LEFT",
+        "PAN_RIGHT",
+        "TILT_UP",
+        "TILT_DOWN",
+        "HOLD",
+        "BURST",
+        "ESTOP",
+        "STATUS"
+      ]
+    },
+    "action_command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command_id", "command"],
+      "properties": {
+        "command_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "command": {"$ref": "#/$defs/action_command_name"},
+        "target": {"$ref": "#/$defs/identifier"},
+        "amount": {"type": "number", "minimum": -1.0, "maximum": 1.0},
+        "duration_ms": {"type": "integer", "minimum": 1, "maximum": 500}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"command": {"const": "GOTO_PRESET"}}},
+          "then": {"required": ["target"]}
+        },
+        {
+          "if": {"properties": {"command": {"const": "BURST"}}},
+          "then": {"required": ["duration_ms"]}
+        }
+      ]
+    },
+    "behavior_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "raw_label", "scores"],
+      "properties": {
+        "label": {"$ref": "#/$defs/behavior_label"},
+        "raw_label": {"$ref": "#/$defs/raw_behavior_label"},
+        "scores": {"$ref": "#/$defs/behavior_scores"},
+        "model_id": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "region_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approach_overlap", "foliage_overlap", "soil_overlap", "motion_score"],
+      "properties": {
+        "approach_overlap": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "foliage_overlap": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "soil_overlap": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "motion_score": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "cat_track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "class",
+        "detection_confidence",
+        "track_quality",
+        "track_age_ms",
+        "ambiguous",
+        "bbox",
+        "zone_id",
+        "behavior",
+        "region_evidence",
+        "aim_preset_id",
+        "no_fire_intersection"
+      ],
+      "properties": {
+        "track_id": {"$ref": "#/$defs/identifier"},
+        "class": {"const": "CAT"},
+        "detection_confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "track_quality": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "track_age_ms": {"$ref": "#/$defs/monotonic_ms"},
+        "ambiguous": {"type": "boolean"},
+        "bbox": {"$ref": "#/$defs/normalized_bbox"},
+        "zone_id": {
+          "oneOf": [
+            {"$ref": "#/$defs/identifier"},
+            {"type": "null"}
+          ]
+        },
+        "behavior": {"$ref": "#/$defs/behavior_evidence"},
+        "region_evidence": {"$ref": "#/$defs/region_evidence"},
+        "aim_preset_id": {
+          "oneOf": [
+            {"$ref": "#/$defs/identifier"},
+            {"type": "null"}
+          ]
+        },
+        "no_fire_intersection": {"type": "boolean"}
+      }
+    },
+    "person_track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "class",
+        "detection_confidence",
+        "track_quality",
+        "track_age_ms",
+        "ambiguous",
+        "bbox"
+      ],
+      "properties": {
+        "track_id": {"$ref": "#/$defs/identifier"},
+        "class": {"const": "PERSON"},
+        "detection_confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "track_quality": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "track_age_ms": {"$ref": "#/$defs/monotonic_ms"},
+        "ambiguous": {"type": "boolean"},
+        "bbox": {"$ref": "#/$defs/normalized_bbox"}
+      }
+    },
+    "policy_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "frame_id", "captured_at_ms", "camera_id", "tracks"],
+      "properties": {
+        "observation_id": {"$ref": "#/$defs/identifier"},
+        "frame_id": {"$ref": "#/$defs/identifier"},
+        "captured_at_ms": {"$ref": "#/$defs/monotonic_ms"},
+        "camera_id": {"$ref": "#/$defs/identifier"},
+        "tracks": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/cat_track"},
+              {"$ref": "#/$defs/person_track"}
+            ]
+          }
+        }
+      }
+    },
+    "cat_track_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "class",
+        "detection_confidence",
+        "track_quality",
+        "initial_track_age_ms",
+        "ambiguous",
+        "bbox",
+        "zone_id",
+        "behavior",
+        "region_evidence",
+        "aim_preset_id",
+        "no_fire_intersection"
+      ],
+      "properties": {
+        "track_id": {"$ref": "#/$defs/identifier"},
+        "class": {"const": "CAT"},
+        "detection_confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "track_quality": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "initial_track_age_ms": {"$ref": "#/$defs/monotonic_ms"},
+        "ambiguous": {"type": "boolean"},
+        "bbox": {"$ref": "#/$defs/normalized_bbox"},
+        "zone_id": {
+          "oneOf": [
+            {"$ref": "#/$defs/identifier"},
+            {"type": "null"}
+          ]
+        },
+        "behavior": {"$ref": "#/$defs/behavior_evidence"},
+        "region_evidence": {"$ref": "#/$defs/region_evidence"},
+        "aim_preset_id": {
+          "oneOf": [
+            {"$ref": "#/$defs/identifier"},
+            {"type": "null"}
+          ]
+        },
+        "no_fire_intersection": {"type": "boolean"}
+      }
+    },
+    "person_track_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "class",
+        "detection_confidence",
+        "track_quality",
+        "initial_track_age_ms",
+        "ambiguous",
+        "bbox"
+      ],
+      "properties": {
+        "track_id": {"$ref": "#/$defs/identifier"},
+        "class": {"const": "PERSON"},
+        "detection_confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "track_quality": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "initial_track_age_ms": {"$ref": "#/$defs/monotonic_ms"},
+        "ambiguous": {"type": "boolean"},
+        "bbox": {"$ref": "#/$defs/normalized_bbox"}
+      }
+    },
+    "policy_observation_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["camera_id", "tracks"],
+      "properties": {
+        "camera_id": {"$ref": "#/$defs/identifier"},
+        "tracks": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/cat_track_template"},
+              {"$ref": "#/$defs/person_track_template"}
+            ]
+          }
+        }
+      }
+    }
+  }
+}

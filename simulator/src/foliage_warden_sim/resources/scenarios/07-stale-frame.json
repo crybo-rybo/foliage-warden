@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "scenario_id": "stale-frame-v1",
+  "title": "Stale inference cannot contribute to confirmation",
+  "description": "A high-confidence eating result captured at time zero arrives two seconds later, far beyond the configured 250 ms frame-age limit. It must be rejected before stateful evidence is updated.",
+  "requirement_ids": ["REQ-STALE-FRAME-HOLD", "REQ-NO-STALE-EVIDENCE"],
+  "tags": ["safety", "stale-frame", "latency", "fault-injection"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 1600
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": []
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "late-eating-frame",
+      "at_ms": 2000,
+      "sequence": 0,
+      "type": "OBSERVATION",
+      "observation": {
+        "observation_id": "stale-eating-1",
+        "frame_id": "stale-frame-1",
+        "captured_at_ms": 0,
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.99,
+            "track_quality": 0.98,
+            "track_age_ms": 2500,
+            "ambiguous": false,
+            "bbox": {"x": 0.36, "y": 0.28, "width": 0.34, "height": 0.44},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "EATING",
+              "raw_label": "EATING",
+              "scores": {"CLEAR": 0.01, "EATING": 0.97, "DIGGING": 0.01, "UNKNOWN": 0.01},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.92,
+              "foliage_overlap": 0.67,
+              "soil_overlap": 0.03,
+              "motion_score": 0.4
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": false
+          }
+        ]
+      }
+    }
+  ],
+  "expectations": {
+    "explanation": "Arrival time minus capture time is 2000 ms. The observation is audited as rejected and never enters the persistence buffer.",
+    "final_state": "MONITORING",
+    "exact_counts": {
+      "ready_transitions": 0,
+      "would_burst_decisions": 0,
+      "burst_commands_issued": 0,
+      "burst_commands_acked": 0,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 0,
+      "fault_transitions": 0
+    },
+    "required_states": ["MONITORING"],
+    "forbidden_states": ["CONFIRMING", "AIMING", "READY", "BURST"],
+    "required_reason_codes": ["FRAME_STALE"],
+    "forbidden_commands": ["GOTO_PRESET", "BURST"],
+    "expected_action_sequence": [],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "STALE_FRAMES_BLOCK_ACTION", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}

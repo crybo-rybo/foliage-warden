@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "scenario_id": "missing-burst-ack-v1",
+  "title": "Missing burst acknowledgement faults without retry",
+  "description": "The preset command is acknowledged, but the first BURST response is deliberately dropped. At the 250 ms ACK deadline the policy must enter FAULT and must never retry the burst automatically.",
+  "requirement_ids": ["REQ-BURST-NO-AUTO-RETRY", "REQ-ACK-TIMEOUT-FAULT", "REQ-ONE-ACTION-PER-INCIDENT"],
+  "tags": ["safety", "actuator", "ack-timeout", "fault-injection", "no-retry"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 2000
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": [
+      {
+        "command": "BURST",
+        "occurrence": 1,
+        "response": "DROP",
+        "reason": "Inject a missing ACK for the non-idempotent command."
+      }
+    ]
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "eating-series",
+      "at_ms": 100,
+      "sequence": 0,
+      "type": "OBSERVATION_SERIES",
+      "interval_ms": 400,
+      "count": 4,
+      "capture_offset_ms": 0,
+      "id_prefix": "missing-ack-eating",
+      "template": {
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.98,
+            "track_quality": 0.95,
+            "initial_track_age_ms": 900,
+            "ambiguous": false,
+            "bbox": {"x": 0.36, "y": 0.28, "width": 0.34, "height": 0.44},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "EATING",
+              "raw_label": "EATING",
+              "scores": {"CLEAR": 0.02, "EATING": 0.94, "DIGGING": 0.01, "UNKNOWN": 0.03},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.91,
+              "foliage_overlap": 0.59,
+              "soil_overlap": 0.04,
+              "motion_score": 0.4
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": false
+          }
+        ]
+      }
+    },
+    {"event_id": "ack-deadline", "at_ms": 1800, "sequence": 0, "type": "TICK"},
+    {"event_id": "prove-no-retry", "at_ms": 5000, "sequence": 0, "type": "TICK"}
+  ],
+  "expectations": {
+    "explanation": "One BURST is transmitted and its outcome becomes TIMEOUT. Since BURST is non-idempotent, ambiguity about its effect is resolved by faulting, never by resending.",
+    "final_state": "FAULT",
+    "exact_counts": {
+      "ready_transitions": 1,
+      "would_burst_decisions": 1,
+      "burst_commands_issued": 1,
+      "burst_commands_acked": 0,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 0,
+      "fault_transitions": 1
+    },
+    "required_states": ["AIMING", "READY", "BURST", "FAULT"],
+    "forbidden_states": [],
+    "required_reason_codes": ["EATING_CONFIRMED", "COMMAND_ACK_TIMEOUT"],
+    "forbidden_commands": [],
+    "expected_action_sequence": [
+      {"command": "GOTO_PRESET", "target": "pot-1-safe-nearby", "result": "ACK"},
+      {"command": "BURST", "result": "TIMEOUT"}
+    ],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "ONE_BURST_PER_INCIDENT", "BURST_NOT_RETRIED", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}

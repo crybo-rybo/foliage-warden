@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "scenario_id": "duplicate-command-id-v1",
+  "title": "Duplicate burst command ID is suppressed",
+  "description": "A normal eating incident generates GOTO_PRESET command 2100 and BURST command 2101. The transport test hook then replays command 2101; the mock actuator must return DUPLICATE without a second accepted burst.",
+  "requirement_ids": ["REQ-COMMAND-ID-DEDUPLICATION", "REQ-ONE-ACTION-PER-INCIDENT"],
+  "tags": ["safety", "transport", "deduplication", "fault-injection"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 2100
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": []
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "eating-series",
+      "at_ms": 100,
+      "sequence": 0,
+      "type": "OBSERVATION_SERIES",
+      "interval_ms": 400,
+      "count": 4,
+      "capture_offset_ms": 0,
+      "id_prefix": "dedupe-eating",
+      "template": {
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.98,
+            "track_quality": 0.95,
+            "initial_track_age_ms": 900,
+            "ambiguous": false,
+            "bbox": {"x": 0.36, "y": 0.28, "width": 0.34, "height": 0.44},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "EATING",
+              "raw_label": "EATING",
+              "scores": {"CLEAR": 0.02, "EATING": 0.94, "DIGGING": 0.01, "UNKNOWN": 0.03},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.91,
+              "foliage_overlap": 0.59,
+              "soil_overlap": 0.04,
+              "motion_score": 0.4
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": false
+          }
+        ]
+      }
+    },
+    {"event_id": "settle-original", "at_ms": 1600, "sequence": 0, "type": "TICK"},
+    {
+      "event_id": "replay-burst-id",
+      "at_ms": 2000,
+      "sequence": 0,
+      "type": "INJECT_ACTION",
+      "action": {"command_id": 2101, "command": "BURST", "duration_ms": 75}
+    }
+  ],
+  "expectations": {
+    "explanation": "The repeated command is observed and audited, but command-ID deduplication occurs before any effect. Only the original is counted as issued.",
+    "final_state": "COOLDOWN",
+    "exact_counts": {
+      "ready_transitions": 1,
+      "would_burst_decisions": 1,
+      "burst_commands_issued": 1,
+      "burst_commands_acked": 1,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 1,
+      "fault_transitions": 0
+    },
+    "required_states": ["READY", "BURST", "COOLDOWN"],
+    "forbidden_states": ["FAULT"],
+    "required_reason_codes": ["EATING_CONFIRMED", "DUPLICATE_COMMAND_ID"],
+    "forbidden_commands": [],
+    "expected_action_sequence": [
+      {"command_id": 2100, "command": "GOTO_PRESET", "target": "pot-1-safe-nearby", "result": "ACK"},
+      {"command_id": 2101, "command": "BURST", "result": "ACK"},
+      {"command_id": 2101, "command": "BURST", "result": "DUPLICATE"}
+    ],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "ONE_BURST_PER_INCIDENT", "COMMAND_IDS_DEDUPLICATED", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "scenario_id": "continuous-incident-cooldown-v1",
+  "title": "A continuous incident cannot action again after cooldown time",
+  "description": "Persistent eating observations continue for 35 seconds, beyond the 30 second minimum cooldown. Because the harmful episode never clears for the configured incident-clear interval, it remains the same incident and stays latched to one action.",
+  "requirement_ids": ["REQ-ONE-ACTION-PER-INCIDENT", "REQ-COOLDOWN-NOT-REARM"],
+  "tags": ["safety", "cooldown", "continuous-incident", "long-running"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 2200
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": []
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "continuous-eating",
+      "at_ms": 100,
+      "sequence": 0,
+      "type": "OBSERVATION_SERIES",
+      "interval_ms": 500,
+      "count": 71,
+      "capture_offset_ms": 0,
+      "id_prefix": "continuous-eating",
+      "template": {
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.98,
+            "track_quality": 0.95,
+            "initial_track_age_ms": 900,
+            "ambiguous": false,
+            "bbox": {"x": 0.36, "y": 0.28, "width": 0.34, "height": 0.44},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "EATING",
+              "raw_label": "EATING",
+              "scores": {"CLEAR": 0.02, "EATING": 0.94, "DIGGING": 0.01, "UNKNOWN": 0.03},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.91,
+              "foliage_overlap": 0.59,
+              "soil_overlap": 0.04,
+              "motion_score": 0.4
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": false
+          }
+        ]
+      }
+    },
+    {"event_id": "end-of-run", "at_ms": 35600, "sequence": 0, "type": "TICK"}
+  ],
+  "expectations": {
+    "explanation": "Elapsed cooldown time does not create a new incident. The action latch resets only after behavior/zone clear evidence lasts for incident_clear_ms.",
+    "final_state": "COOLDOWN",
+    "exact_counts": {
+      "ready_transitions": 1,
+      "would_burst_decisions": 1,
+      "burst_commands_issued": 1,
+      "burst_commands_acked": 1,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 0,
+      "fault_transitions": 0
+    },
+    "required_states": ["READY", "BURST", "COOLDOWN"],
+    "forbidden_states": ["FAULT"],
+    "required_reason_codes": ["EATING_CONFIRMED", "COOLDOWN_ACTIVE", "INCIDENT_ALREADY_ACTIONED"],
+    "forbidden_commands": [],
+    "expected_action_sequence": [
+      {"command": "GOTO_PRESET", "target": "pot-1-safe-nearby", "result": "ACK"},
+      {"command": "BURST", "result": "ACK"}
+    ],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "ONE_BURST_PER_INCIDENT", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}

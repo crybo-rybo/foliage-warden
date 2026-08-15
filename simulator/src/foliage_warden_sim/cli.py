@@ -7,11 +7,8 @@ import sys
 from pathlib import Path
 
 from .engine import SimulationError, run_scenario, stable_json, write_jsonl
+from .resources import default_scenario_dir
 from .validation import ContractError
-
-
-def _default_scenario_dir() -> Path:
-    return Path(__file__).resolve().parents[3] / "scenarios"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--scenario-dir",
         type=Path,
-        default=_default_scenario_dir(),
+        default=default_scenario_dir(),
         help="fixture directory",
     )
     parser.add_argument(

@@ -13,6 +13,7 @@ import rfc8785
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
+from .resources import contract_root_for
 from .types import JsonObject, ScheduledInput
 
 MAX_SAFE_INTEGER = 9_007_199_254_740_991
@@ -374,9 +375,9 @@ def load_contracts(
 ) -> LoadedContracts:
     scenario_path = Path(scenario_path).resolve()
     scenario = _read_object(scenario_path)
-    repository_root = Path(__file__).resolve().parents[3]
+    contract_root = contract_root_for(scenario_path)
     schemas_path = (
-        Path(schema_dir).resolve() if schema_dir else repository_root / "schemas"
+        Path(schema_dir).resolve() if schema_dir else contract_root / "schemas"
     )
     registry, schemas = _registry(schemas_path)
     try:
@@ -394,8 +395,10 @@ def load_contracts(
         if config_path is not None
         else (scenario_path.parent / scenario["config_ref"]).resolve()
     )
-    if config_path is None and not resolved_config.is_relative_to(repository_root):
-        raise ContractError("scenario config_ref must resolve inside the repository")
+    if config_path is None and not resolved_config.is_relative_to(contract_root):
+        raise ContractError(
+            "scenario config_ref must resolve inside its trusted contract root"
+        )
     config = _read_object(resolved_config)
     _validate_schema(config, config_schema, registry, resolved_config)
     validate_runtime_semantics(config, str(resolved_config))

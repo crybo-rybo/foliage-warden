@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foliage-warden.local/schemas/action-audit.schema.json",
+  "title": "Foliage Warden action decision audit record",
+  "description": "One JSONL record explaining a suppressed, shadow, mock, replay, or hardware action decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "audit_id",
+    "sequence",
+    "run_id",
+    "monotonic_ms",
+    "config_id",
+    "config_sha256",
+    "state_before",
+    "state_after",
+    "decision",
+    "reason_codes",
+    "evidence",
+    "safety",
+    "outcome"
+  ],
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "audit_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "sequence": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "run_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "monotonic_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+    "wall_time": {"type": "string", "format": "date-time"},
+    "config_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "config_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+    "scenario_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "incident_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "trigger_event_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "state_before": {"$ref": "common.schema.json#/$defs/policy_state"},
+    "state_after": {"$ref": "common.schema.json#/$defs/policy_state"},
+    "decision": {
+      "type": "string",
+      "enum": ["SUPPRESS", "WOULD_DISPATCH", "DISPATCH"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "common.schema.json#/$defs/reason_code"}
+    },
+    "evidence": {"$ref": "#/$defs/evidence"},
+    "safety": {"$ref": "#/$defs/safety_snapshot"},
+    "action": {"$ref": "#/$defs/audited_action"},
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "NOT_SENT",
+        "PENDING",
+        "ACK",
+        "DENIED",
+        "TIMEOUT",
+        "DUPLICATE",
+        "TRANSPORT_ERROR",
+        "SUPPRESSED"
+      ]
+    },
+    "ack_monotonic_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"decision": {"enum": ["WOULD_DISPATCH", "DISPATCH"]}}},
+      "then": {"required": ["action"]}
+    },
+    {
+      "if": {"properties": {"decision": {"const": "SUPPRESS"}}},
+      "then": {"properties": {"outcome": {"enum": ["NOT_SENT", "SUPPRESSED"]}}}
+    },
+    {
+      "if": {"properties": {"outcome": {"const": "ACK"}}},
+      "then": {"required": ["ack_monotonic_ms"]}
+    }
+  ],
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "captured_at_ms", "age_ms", "track_ids", "model_ids"],
+      "properties": {
+        "observation_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "captured_at_ms": {"$ref": "common.schema.json#/$defs/monotonic_ms"},
+        "age_ms": {"type": "integer", "minimum": 0, "maximum": 30000},
+        "track_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": {"$ref": "common.schema.json#/$defs/identifier"}
+        },
+        "zone_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "aim_preset_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "behavior": {"$ref": "common.schema.json#/$defs/behavior_evidence"},
+        "region_evidence": {"$ref": "common.schema.json#/$defs/region_evidence"},
+        "model_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/identifier"}
+        }
+      }
+    },
+    "safety_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "armed",
+        "person_clear",
+        "single_cat_clear",
+        "frame_fresh",
+        "track_quality_clear",
+        "behavior_clear",
+        "no_fire_clear",
+        "safe_preset_available",
+        "hardware_ready",
+        "cooldown_clear",
+        "incident_action_available",
+        "all_clear"
+      ],
+      "properties": {
+        "armed": {"type": "boolean"},
+        "person_clear": {"type": "boolean"},
+        "single_cat_clear": {"type": "boolean"},
+        "frame_fresh": {"type": "boolean"},
+        "track_quality_clear": {"type": "boolean"},
+        "behavior_clear": {"type": "boolean"},
+        "no_fire_clear": {"type": "boolean"},
+        "safe_preset_available": {"type": "boolean"},
+        "hardware_ready": {"type": "boolean"},
+        "cooldown_clear": {"type": "boolean"},
+        "incident_action_available": {"type": "boolean"},
+        "all_clear": {"type": "boolean"}
+      }
+    },
+    "audited_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "dispatch_mode",
+        "physical_effect_possible",
+        "retry_count",
+        "automatic_retry_allowed"
+      ],
+      "properties": {
+        "command": {"$ref": "common.schema.json#/$defs/action_command"},
+        "dispatch_mode": {
+          "type": "string",
+          "enum": ["SUPPRESSED", "SHADOW", "MOCK", "REPLAY", "HARDWARE"]
+        },
+        "physical_effect_possible": {"type": "boolean"},
+        "retry_count": {"type": "integer", "minimum": 0, "maximum": 10},
+        "automatic_retry_allowed": {"type": "boolean"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "dispatch_mode": {"enum": ["SUPPRESSED", "SHADOW", "MOCK", "REPLAY"]}
+            }
+          },
+          "then": {"properties": {"physical_effect_possible": {"const": false}}}
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "properties": {"command": {"const": "BURST"}},
+                "required": ["command"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "retry_count": {"const": 0},
+              "automatic_retry_allowed": {"const": false}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

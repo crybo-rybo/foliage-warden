@@ -26,6 +26,12 @@ nonzero when a contract, expectation, invariant, or trace comparison fails.
 Every scenario is executed twice by default and its deterministic signature is
 compared before it can pass.
 
+Editable runs use the repository-level `scenarios/`, `schemas/`, and
+`config/simulation-safe.example.json` as their source of truth. Source and wheel
+distributions also contain a byte-identical contract mirror, so an installed
+`foliage-warden-sim --all` works outside this repository. The test suite rejects
+any drift between the repository contracts and that packaged mirror.
+
 Useful artifacts:
 
 ```sh

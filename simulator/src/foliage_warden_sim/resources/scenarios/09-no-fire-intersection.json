@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "scenario_id": "no-fire-intersection-v1",
+  "title": "No-fire geometry blocks persistent eating",
+  "description": "All perception gates pass, but the calibrated path to the selected preset intersects a no-fire polygon. Geometry is a hard interlock and must prevent aiming or action.",
+  "requirement_ids": ["REQ-NO-FIRE-BLOCKS-ACTION", "REQ-CALIBRATED-SAFE-PRESET"],
+  "tags": ["safety", "geometry", "no-fire", "eating"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 1800
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": []
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "blocked-path-series",
+      "at_ms": 100,
+      "sequence": 0,
+      "type": "OBSERVATION_SERIES",
+      "interval_ms": 400,
+      "count": 5,
+      "capture_offset_ms": 0,
+      "id_prefix": "no-fire",
+      "template": {
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.98,
+            "track_quality": 0.95,
+            "initial_track_age_ms": 900,
+            "ambiguous": false,
+            "bbox": {"x": 0.36, "y": 0.28, "width": 0.34, "height": 0.44},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "EATING",
+              "raw_label": "EATING",
+              "scores": {"CLEAR": 0.02, "EATING": 0.94, "DIGGING": 0.01, "UNKNOWN": 0.03},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.91,
+              "foliage_overlap": 0.6,
+              "soil_overlap": 0.04,
+              "motion_score": 0.41
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": true
+          }
+        ]
+      }
+    }
+  ],
+  "expectations": {
+    "explanation": "The path-intersection result is a hard pre-confirmation block; no preset command is emitted.",
+    "final_state": "MONITORING",
+    "exact_counts": {
+      "ready_transitions": 0,
+      "would_burst_decisions": 0,
+      "burst_commands_issued": 0,
+      "burst_commands_acked": 0,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 0,
+      "fault_transitions": 0
+    },
+    "required_states": ["MONITORING"],
+    "forbidden_states": ["AIMING", "READY", "BURST"],
+    "required_reason_codes": ["NO_FIRE_INTERSECTION"],
+    "forbidden_commands": ["GOTO_PRESET", "BURST"],
+    "expected_action_sequence": [],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "NO_FIRE_BLOCKS_ACTION", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}

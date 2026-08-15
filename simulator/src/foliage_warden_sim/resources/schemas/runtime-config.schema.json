@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foliage-warden.local/schemas/runtime-config.schema.json",
+  "title": "Foliage Warden runtime configuration",
+  "description": "Safety-bounded version 1 runtime configuration. Startup is unconditionally disarmed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "config_id",
+    "clock",
+    "runtime",
+    "camera",
+    "perception",
+    "policy",
+    "scene",
+    "actuator",
+    "audit"
+  ],
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "config_id": {"$ref": "common.schema.json#/$defs/identifier"},
+    "clock": {"$ref": "#/$defs/clock"},
+    "runtime": {"$ref": "#/$defs/runtime"},
+    "camera": {"$ref": "#/$defs/camera"},
+    "perception": {"$ref": "#/$defs/perception"},
+    "policy": {"$ref": "#/$defs/policy"},
+    "scene": {"$ref": "#/$defs/scene"},
+    "actuator": {"$ref": "#/$defs/actuator"},
+    "audit": {"$ref": "#/$defs/audit"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "runtime": {
+            "properties": {
+              "mode": {"enum": ["SIMULATION", "REPLAY", "OBSERVE_ONLY", "SHADOW"]}
+            },
+            "required": ["mode"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "actuator": {
+            "properties": {
+              "allow_physical_effects": {"const": false}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "actuator": {
+            "properties": {
+              "allow_physical_effects": {"const": true}
+            },
+            "required": ["allow_physical_effects"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "runtime": {
+            "properties": {"mode": {"const": "LIVE"}}
+          },
+          "actuator": {
+            "properties": {
+              "enabled": {"const": true},
+              "backend": {"const": "SERIAL"},
+              "burst": {
+                "properties": {"enabled": {"const": true}}
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "tick_ms"],
+      "properties": {
+        "source": {"type": "string", "enum": ["VIRTUAL", "MONOTONIC"]},
+        "tick_ms": {"type": "integer", "minimum": 1, "maximum": 1000}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "startup_state", "manual_arm_required", "restart_requires_rearm"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["SIMULATION", "REPLAY", "OBSERVE_ONLY", "SHADOW", "LIVE"]
+        },
+        "startup_state": {"const": "DISARMED"},
+        "manual_arm_required": {"const": true},
+        "restart_requires_rearm": {"const": true}
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera_id",
+        "source",
+        "width",
+        "height",
+        "fps",
+        "max_frame_age_ms",
+        "disconnect_fault_after_ms"
+      ],
+      "properties": {
+        "camera_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "source": {"type": "string", "enum": ["SCRIPTED", "FILE", "V4L2", "GSTREAMER"]},
+        "uri": {"type": "string", "minLength": 1, "maxLength": 2048},
+        "width": {"type": "integer", "minimum": 160, "maximum": 7680},
+        "height": {"type": "integer", "minimum": 120, "maximum": 4320},
+        "fps": {"type": "number", "minimum": 1.0, "maximum": 240.0},
+        "max_frame_age_ms": {"type": "integer", "minimum": 20, "maximum": 5000},
+        "disconnect_fault_after_ms": {"type": "integer", "minimum": 100, "maximum": 30000}
+      }
+    },
+    "perception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["detection", "tracking", "behavior"],
+      "properties": {
+        "detection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cat_min_confidence", "person_min_confidence"],
+          "properties": {
+            "cat_min_confidence": {"type": "number", "minimum": 0.1, "maximum": 1.0},
+            "person_min_confidence": {"type": "number", "minimum": 0.1, "maximum": 1.0}
+          }
+        },
+        "tracking": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min_track_age_ms", "min_track_quality", "max_track_gap_ms"],
+          "properties": {
+            "min_track_age_ms": {"type": "integer", "minimum": 0, "maximum": 60000},
+            "min_track_quality": {"type": "number", "minimum": 0.1, "maximum": 1.0},
+            "max_track_gap_ms": {"type": "integer", "minimum": 20, "maximum": 5000}
+          }
+        },
+        "behavior": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eating_min_probability",
+            "digging_min_probability",
+            "unknown_max_probability",
+            "eating_min_foliage_overlap",
+            "digging_min_soil_overlap",
+            "digging_min_motion_score"
+          ],
+          "properties": {
+            "eating_min_probability": {"type": "number", "minimum": 0.5, "maximum": 1.0},
+            "digging_min_probability": {"type": "number", "minimum": 0.5, "maximum": 1.0},
+            "unknown_max_probability": {"type": "number", "minimum": 0.0, "maximum": 0.5},
+            "eating_min_foliage_overlap": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "digging_min_soil_overlap": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "digging_min_motion_score": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "confirmation_window_ms",
+        "harmful_persistence_ms",
+        "min_supporting_observations",
+        "incident_clear_ms",
+        "cooldown_ms",
+        "max_actions_per_incident",
+        "block_on_person",
+        "block_on_multiple_cats",
+        "block_on_ambiguous_track",
+        "hardware_ready_required",
+        "safe_preset_required",
+        "no_fire_clear_required"
+      ],
+      "properties": {
+        "confirmation_window_ms": {"type": "integer", "minimum": 250, "maximum": 10000},
+        "harmful_persistence_ms": {"type": "integer", "minimum": 250, "maximum": 10000},
+        "min_supporting_observations": {"type": "integer", "minimum": 2, "maximum": 300},
+        "incident_clear_ms": {"type": "integer", "minimum": 250, "maximum": 30000},
+        "cooldown_ms": {"type": "integer", "minimum": 30000, "maximum": 86400000},
+        "max_actions_per_incident": {"const": 1},
+        "block_on_person": {"const": true},
+        "block_on_multiple_cats": {"const": true},
+        "block_on_ambiguous_track": {"const": true},
+        "hardware_ready_required": {"const": true},
+        "safe_preset_required": {"const": true},
+        "no_fire_clear_required": {"const": true}
+      }
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "points"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "type": {"type": "string", "enum": ["approach", "foliage", "soil", "no_fire"]},
+        "points": {"$ref": "common.schema.json#/$defs/normalized_polygon"},
+        "plant_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "description": {"type": "string", "maxLength": 512}
+      }
+    },
+    "aim_preset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "zone_id", "point"],
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "zone_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "point": {"$ref": "common.schema.json#/$defs/normalized_point"},
+        "hardware_target": {"type": "string", "minLength": 1, "maxLength": 128},
+        "description": {"type": "string", "maxLength": 512}
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calibration_id", "coordinate_space", "zones", "aim_presets"],
+      "properties": {
+        "calibration_id": {"$ref": "common.schema.json#/$defs/identifier"},
+        "coordinate_space": {"const": "NORMALIZED_IMAGE"},
+        "zones": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {"$ref": "#/$defs/zone"}
+        },
+        "aim_presets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/aim_preset"}
+        }
+      }
+    },
+    "actuator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "backend",
+        "allow_physical_effects",
+        "ack_timeout_ms",
+        "watchdog_timeout_ms",
+        "deduplicate_command_ids",
+        "automatic_retry_burst",
+        "burst"
+      ],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "backend": {"type": "string", "enum": ["MOCK", "REPLAY", "SERIAL"]},
+        "allow_physical_effects": {"type": "boolean"},
+        "ack_timeout_ms": {"type": "integer", "minimum": 10, "maximum": 5000},
+        "watchdog_timeout_ms": {"type": "integer", "minimum": 100, "maximum": 30000},
+        "deduplicate_command_ids": {"const": true},
+        "automatic_retry_burst": {"const": false},
+        "burst": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "duration_ms", "hardware_max_duration_ms"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "duration_ms": {"type": "integer", "minimum": 1, "maximum": 500},
+            "hardware_max_duration_ms": {"type": "integer", "minimum": 1, "maximum": 500}
+          }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "format", "flush_each_action", "include_evidence", "config_hash_algorithm"],
+      "properties": {
+        "enabled": {"const": true},
+        "format": {"const": "JSONL"},
+        "flush_each_action": {"const": true},
+        "include_evidence": {"const": true},
+        "config_hash_algorithm": {"const": "SHA-256"}
+      }
+    }
+  }
+}

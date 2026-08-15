@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "scenario_id": "sniffing-hard-negative-v1",
+  "title": "Sniffing foliage is a hard negative",
+  "description": "The cat remains close to and overlaps foliage, but the temporal classifier says SNIFFING/CLEAR. Strong region overlap must not turn a non-harmful behavior into EATING.",
+  "requirement_ids": ["REQ-SNIFFING-NEGATIVE", "REQ-BEHAVIOR-AND-REGION"],
+  "tags": ["hard-negative", "sniffing", "foliage"],
+  "config_ref": "../config/simulation-safe.example.json",
+  "initial_conditions": {
+    "clock_ms": 0,
+    "policy_state": "DISARMED",
+    "armed": false,
+    "camera_status": "CONNECTED",
+    "actuator_status": "READY",
+    "command_id_seed": 1100
+  },
+  "actuator_script": {
+    "default_response": "ACK",
+    "ack_delay_ms": 20,
+    "deduplicate_command_ids": true,
+    "overrides": []
+  },
+  "timeline": [
+    {"event_id": "arm", "at_ms": 0, "sequence": 0, "type": "CONTROL", "operation": "ARM"},
+    {
+      "event_id": "sniffing-series",
+      "at_ms": 100,
+      "sequence": 0,
+      "type": "OBSERVATION_SERIES",
+      "interval_ms": 300,
+      "count": 6,
+      "capture_offset_ms": 0,
+      "id_prefix": "sniffing",
+      "template": {
+        "camera_id": "camera-1",
+        "tracks": [
+          {
+            "track_id": "cat-a",
+            "class": "CAT",
+            "detection_confidence": 0.98,
+            "track_quality": 0.96,
+            "initial_track_age_ms": 900,
+            "ambiguous": false,
+            "bbox": {"x": 0.36, "y": 0.3, "width": 0.34, "height": 0.42},
+            "zone_id": "pot-1-approach",
+            "behavior": {
+              "label": "CLEAR",
+              "raw_label": "SNIFFING",
+              "scores": {"CLEAR": 0.88, "EATING": 0.07, "DIGGING": 0.01, "UNKNOWN": 0.04},
+              "model_id": "scripted-behavior-v1"
+            },
+            "region_evidence": {
+              "approach_overlap": 0.88,
+              "foliage_overlap": 0.61,
+              "soil_overlap": 0.08,
+              "motion_score": 0.18
+            },
+            "aim_preset_id": "pot-1-safe-nearby",
+            "no_fire_intersection": false
+          }
+        ]
+      }
+    }
+  ],
+  "expectations": {
+    "explanation": "Foliage overlap is supporting evidence only. A CLEAR temporal label keeps the decision below the action gate.",
+    "final_state": "MONITORING",
+    "exact_counts": {
+      "ready_transitions": 0,
+      "would_burst_decisions": 0,
+      "burst_commands_issued": 0,
+      "burst_commands_acked": 0,
+      "physical_bursts": 0,
+      "automatic_retries": 0,
+      "duplicate_commands_suppressed": 0,
+      "fault_transitions": 0
+    },
+    "required_states": ["MONITORING", "TRACKING"],
+    "forbidden_states": ["READY", "BURST"],
+    "required_reason_codes": ["BEHAVIOR_CLEAR"],
+    "forbidden_commands": ["GOTO_PRESET", "BURST"],
+    "expected_action_sequence": [],
+    "invariants": ["STARTS_DISARMED", "NO_PHYSICAL_EFFECTS", "ACTIONS_AUDITED", "DETERMINISTIC_REPLAY"]
+  }
+}
