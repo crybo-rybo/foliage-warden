@@ -75,3 +75,188 @@ jobs:
           node-version: 22
       - run: node --test tools/calibration/geometry.test.mjs
       - run: node --check tools/calibration/app.js
+
+  simulator:
+    name: Simulator ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: simulator
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --extra dev --locked
+      - run: uv run --extra dev pytest
+      - run: uv run --extra dev ruff check src tests
+      - name: Run every canonical scenario
+        run: uv run --extra dev foliage-warden-sim --all
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build
+
+  perception:
+    name: Perception ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: perception
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --extra desktop --group dev --locked
+      - run: uv run --extra desktop --group dev pytest
+      - run: >-
+          uv run --extra desktop --group dev ruff check .
+          ../tools/fetch_model.py ../tools/evaluate_synthetic_scenes.py
+      - name: Verify pinned model on generated scenes
+        if: matrix.python == '3.10'
+        run: |
+          uv run --extra desktop python ../tools/fetch_model.py yolox_s_opencv_zoo
+          uv run --extra desktop python ../tools/evaluate_synthetic_scenes.py
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build
+
+  training:
+    name: Temporal training pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: training
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: '3.10'
+          # PyPI's Linux PyTorch wheel resolves the CUDA runtime stack. Avoid
+          # uploading several GiB of transient packages into the Actions cache.
+          enable-cache: false
+      - run: uv sync --extra dev --locked
+      - run: uv run --extra dev pytest
+      - run: uv run --extra dev ruff check .
+      - run: shellcheck scripts/smoke.sh ../tools/verify_behavior_bridge.sh
+      - name: Train/export, infer, and execute mock replay
+        run: bash ../tools/verify_behavior_bridge.sh
+      - run: uv build
+
+  review:
+    name: Review workbench ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: review
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        if: matrix.python == '3.10'
+        with:
+          node-version: 22
+      - run: uv sync --group dev --locked
+      - run: uv run --group dev python -m unittest discover -s tests
+      - run: uv run --group dev ruff check src tests
+      - name: Browser helper tests
+        if: matrix.python == '3.10'
+        run: |
+          node --check src/foliage_warden_review/web/core.js
+          node --check src/foliage_warden_review/web/app.js
+          node --test tests-js/core.test.js
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build
+
+  recorder:
+    name: Privacy-bounded recorder ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: recorder
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --extra desktop --group dev --locked
+      - run: uv run --extra desktop --group dev pytest
+      - run: uv run --group dev ruff check .
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build
+
+  shadow:
+    name: Mock-only shadow runtime ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: shadow
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --group dev --locked
+      - run: uv run --group dev pytest
+      - run: uv run --group dev ruff check src tests
+      - name: Real ONNX inference bridge
+        if: matrix.python == '3.10'
+        run: |
+          uv sync --group dev --group inference-test --locked
+          uv run --group dev --group inference-test pytest tests/test_inference.py
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build
+
+  detection-eval:
+    name: Public detector evaluation ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: detection-eval
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --group dev --locked
+      - run: uv run --group dev pytest
+      - run: uv run --group dev ruff check .
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build

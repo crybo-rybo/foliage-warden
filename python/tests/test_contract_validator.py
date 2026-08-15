@@ -5,6 +5,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+
 from tools.validate_contracts import (
     ContractError,
     validate_polygon,

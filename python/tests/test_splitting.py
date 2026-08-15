@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from foliage_warden_eval.schemas import DatasetItem
 from foliage_warden_eval.split_cli import main
 from foliage_warden_eval.splitting import split_by_session

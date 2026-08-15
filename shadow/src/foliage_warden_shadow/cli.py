@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from foliage_warden_sim.engine import SimulationError
+from foliage_warden_sim.resources import default_contract_root
 from foliage_warden_sim.validation import ContractError as SimulatorContractError
 
 from .contracts import (
@@ -22,8 +23,8 @@ from .fusion import FusionOptions
 from .runner import execute_shadow, write_json, write_jsonl
 
 
-def _repository_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+def _default_config_path() -> Path:
+    return default_contract_root() / "config" / "simulation-safe.example.json"
 
 
 def _bounded_ms(value: str) -> int:
@@ -46,7 +47,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--config",
         type=Path,
-        default=_repository_root() / "config" / "simulation-safe.example.json",
+        default=_default_config_path(),
+        help="simulation-safe runtime config (default: simulator's packaged safe config)",
     )
     parser.add_argument("--scenario-id")
     parser.add_argument("--scenario-out", type=Path)

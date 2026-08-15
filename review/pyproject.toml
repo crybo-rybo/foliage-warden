@@ -11,6 +11,9 @@ requires-python = ">=3.10"
 authors = [{ name = "Foliage Warden contributors" }]
 dependencies = []
 
+[dependency-groups]
+dev = ["ruff>=0.12,<1"]
+
 [project.scripts]
 foliage-warden-review = "foliage_warden_review.cli:main"
 

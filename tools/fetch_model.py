@@ -7,11 +7,10 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import sys
 import tempfile
 import urllib.request
-
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = PROJECT_ROOT / "models" / "registry.json"

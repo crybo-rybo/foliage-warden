@@ -135,6 +135,10 @@ uv run --project shadow foliage-warden-shadow \
   --pretty
 ```
 
+When `--config` is omitted, the CLI uses the simulator package's bundled,
+simulation-safe example configuration. Editable checkouts use the byte-identical
+repository copy; installed wheels use the packaged copy.
+
 The default behavior timeout is 50 ms and the maximum accepted prediction latency is 250 ms. A
 prediction beyond either bound remains visible in diagnostics but contributes UNKNOWN behavior. A
 timeout releases the UNKNOWN frame at its deadline; a result that arrives before the timeout but

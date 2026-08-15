@@ -5,24 +5,31 @@
 # Python environments and caches
 /.venv/
 /python/.venv/
+**/.venv/
 __pycache__/
 *.py[cod]
 /.pytest_cache/
 /python/.pytest_cache/
 /.ruff_cache/
+**/.pytest_cache/
+**/.ruff_cache/
+**/dist/
 
 # Generated runtime data. These may contain household video and must never be
-# committed accidentally.
-/artifacts/
-/events/
-/recordings/
-/models/*.onnx
-/models/*.engine
-/models/*.plan
+# committed accidentally, regardless of which package was the working directory.
+**/artifacts/
+**/events/
+**/recordings/
+**/incidents/
+**/.staging/
+**/clips/
+**/runs/
+**/models/**/*.onnx
+**/models/**/*.engine
+**/models/**/*.plan
 
 # Tooling
 .coverage
 coverage.xml
 compile_commands.json
 .DS_Store
-

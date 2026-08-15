@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 
 import pytest
-
 from foliage_warden_eval.statistics import (
     percentiles,
     poisson_rate_upper_bound,

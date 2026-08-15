@@ -4,11 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from foliage_warden_recorder.cli import main
 
+np = pytest.importorskip("numpy")
 cv2 = pytest.importorskip("cv2")
 
 
