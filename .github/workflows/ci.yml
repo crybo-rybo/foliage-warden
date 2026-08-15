@@ -260,3 +260,32 @@ jobs:
       - name: Build distributions
         if: matrix.python == '3.10'
         run: uv build
+
+  assembler:
+    name: Offline incident assembler ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: assembler
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --group dev --locked
+      - run: uv run --group dev pytest
+      - run: uv run --group dev ruff check .
+      - run: uv run --group dev ruff format --check .
+      - name: Recorder through ONNX and full mock replay
+        if: matrix.python == '3.10'
+        run: |
+          uv sync --group dev --group inference-test --locked
+          uv run --group dev --group inference-test pytest tests/test_shadow_integration.py
+      - name: Build distributions
+        if: matrix.python == '3.10'
+        run: uv build

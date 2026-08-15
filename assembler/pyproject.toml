@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foliage-warden-assembler"
+version = "0.1.0"
+description = "Strict offline recorder-to-shadow evidence assembler"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "foliage-warden-shadow",
+  "numpy>=1.26,<3",
+  "opencv-python-headless>=4.10,<5",
+]
+
+[dependency-groups]
+dev = [
+  "foliage-warden-recorder",
+  "pytest>=8.3,<10",
+  "ruff>=0.12,<1",
+]
+inference-test = [
+  "onnx>=1.16",
+  "onnxruntime>=1.18,<1.24",
+]
+
+[project.scripts]
+foliage-warden-assemble = "foliage_warden_assembler.cli:entrypoint"
+
+[tool.uv.sources]
+foliage-warden-recorder = { path = "../recorder", editable = true }
+foliage-warden-shadow = { path = "../shadow", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/foliage_warden_assembler"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]

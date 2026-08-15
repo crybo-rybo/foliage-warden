@@ -114,11 +114,16 @@ metadata reported by those packages. This distinguishes the runtime environments
 is not a signed wheel, compiler, or supply-chain attestation. An output file is written atomically
 with mode `0600`; stdout remains empty if any request fails.
 
-This is an offline **clip-to-prediction-to-shadow** path, not perception-to-crop end to end. The
-repository still needs a causal assembler that extracts and hashes per-track RGB clips from
-recorder/perception artifacts, carries authenticated source-frame provenance, and proves that its
-crop/window mapping matches the live detector. Until that exists, clip origin, crop correctness,
-and timestamp truth remain unvalidated inputs and must not be presented as deployment evidence.
+This command remains the file-only **clip-to-prediction-to-shadow** boundary. The repository's
+[`assembler`](../assembler/README.md) now reconciles a private recorder incident with its original
+perception stream and emits strictly causal, hashed full-frame RGB requests for this command. It
+publishes `selected-perceptions.jsonl` only for strict inference binding; policy replay must use
+the separate full `incident-perceptions.jsonl` plus the resulting sparse predictions so clear,
+person, and ambiguous observations remain in the safety timeline. It does not create per-track
+crops: the current training/export contract has no crop, padding, or missing-box policy. Recorder
+hashes also detect mismatch only while metadata is trusted; they do not authenticate camera
+origin, pixel-to-record correspondence, or timestamp truth. Those limits must not be presented as
+deployment evidence.
 
 ## Run a replay
 

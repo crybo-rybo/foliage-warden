@@ -1,0 +1,17 @@
+default: check
+
+test:
+    uv run --locked pytest
+
+test-inference:
+    uv run --locked --group inference-test pytest tests/test_shadow_integration.py
+
+lint:
+    uv run --locked ruff check src tests
+    uv run --locked ruff format --check src tests
+
+build:
+    uv lock --check
+    uv build
+
+check: lint test build

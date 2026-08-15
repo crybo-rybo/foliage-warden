@@ -14,9 +14,9 @@ capacity testing on the available Jetson Orin Nano Super.
 | Contracts and safety policy | Versioned schemas, safe example configuration, a deterministic C++20 state machine, fail-closed interlocks, event latching, cooldown, ESTOP, and an auditable mock actuator |
 | End-to-end simulation | Fourteen canonical virtual-time scenarios, exact expected traces, a C++ overlap probe, evaluator-compatible replay, and invariant checking |
 | Perception | A pinned YOLOX-S cat/person detector, deterministic preprocessing and NMS, tracking, polygon evidence, image/video/camera adapters, and observe-only JSONL |
-| Behavior pipeline | Leakage-safe manifests, a compact causal CNN+GRU baseline, deterministic training/evaluation, ONNX export/parity, and a verified offline clip-to-prediction bridge; synthetic weights make no accuracy claim |
+| Behavior pipeline | Leakage-safe manifests, a compact causal CNN+GRU baseline, deterministic training/evaluation, ONNX export/parity, and a verified recorder-incident-to-causal-clip-to-prediction bridge; synthetic weights make no accuracy claim |
 | Shadow integration | Strict perception/behavior joins, deadline and ordering checks, conservative evidence fusion, configuration snapshots, and two-pass mock policy replay |
-| Evaluation and data work | Event metrics, false-would-action rate bounds, public detector regression data, generated scenes, a private incident recorder, and a local review/labeling workbench |
+| Evaluation and data work | Event metrics, false-would-action rate bounds, public detector regression data, generated scenes, a private incident recorder with per-frame perception bindings, and a local review/labeling workbench |
 | Edge validation | Native policy tests, detector and temporal-model TensorRT builds, numerical checks, and a no-recording camera smoke test on the Jetson |
 
 Run the complete repository test and lint suite with `just check`; dependency

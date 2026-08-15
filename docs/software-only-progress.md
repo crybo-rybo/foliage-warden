@@ -15,9 +15,10 @@ adapter, and nothing here has been armed against an animal.
 | Evaluator | Event matching, per-label precision/recall/F1, latency and data-quality metrics, exact false-would-action rate bound, session-safe splits, invariant checking | Meaningful performance numbers require real labeled sessions |
 | Perception | Pinned OpenCV Zoo YOLOX-S preprocessing, decoding, cat/person filtering, deterministic NMS/tracking, polygon evidence, camera/video/image inputs | Always emits `UNKNOWN`, `OBSERVE_ONLY`, and `would_action=false` |
 | Behavior training | Strict manifests, session/day leakage checks, causal CNN+GRU, train/evaluate/export CLIs, artifact hashes, ONNX Runtime parity | Synthetic data proves the pipeline, not behavior accuracy |
-| Offline behavior inference | Strict causal clip manifests, external ONNX digest lock, sidecar/graph/embedded-metadata checks, exact preprocessing, deterministic CPU inference, and private behavior JSONL | Accepts pre-extracted full RGB clips; pixel origin and any track crop are not authenticated |
+| Offline incident assembly | Strict recorder/perception reconciliation, per-frame record bindings, causal full-frame RGB clips, explicit window-identity suppression, separate target-inference/full-replay streams, private atomic publication, and bounded memory/disk | Hashes detect mismatch while metadata is trusted; they do not authenticate camera pixels or prove visual correspondence |
+| Offline behavior inference | Strict causal clip manifests, external ONNX digest lock, sidecar/graph/embedded-metadata checks, exact preprocessing, deterministic CPU inference, and private behavior JSONL | Full-frame scene evidence only; the current model contract does not define a track-crop policy |
 | Shadow runtime | Strict joins and hashes, prediction deadlines, capture-order handling, zone reconciliation, conservative behavior mapping, simulator plus evaluator replay | Offline/mock-only; missing or inconsistent evidence becomes `UNKNOWN` |
-| Incident data | Silent, bounded, private, atomic clip recorder and local browser review/labeling workbench | Explicit local manifests; no upload or network egress |
+| Incident data | Silent, bounded, private, atomic clip recorder with per-frame canonical perception-record bindings and a local browser review/labeling workbench | Explicit local manifests; no upload or network egress |
 | Detector baseline | Locked 100-image COCO 2017 development subset with cryptographically bound canonical predictions and report | Public regression set, not installed-camera acceptance data |
 
 The canonical simulator completes all fourteen scenarios, producing the stable
@@ -84,10 +85,12 @@ the browser helper and calibration JavaScript tests.
 3. Train and calibrate the temporal classifier on real `PASSING`, `SNIFFING`,
    `EATING`, `DIGGING`, and `OTHER/UNKNOWN` examples. Requalify ONNX/TensorRT
    parity and FP16 only after real operating thresholds exist.
-4. Build the missing causal track-clip assembler that binds detector frames,
-   timestamps, bounding boxes, crop policy, and pixels to the offline inference
-   request. Then integrate TensorRT into the live observe-only pipeline, replace
-   the simple IoU tracker if local data warrants it, and run long shadow
+4. Use installed-view data to decide whether the implemented causal full-frame
+   assembler is sufficient. A track-crop path would require a new, explicit
+   training and inference contract for box rounding, padding, missing-track
+   fallback, context, and temporal sampling; it must not be added only at
+   inference time. Integrate TensorRT into the live observe-only pipeline,
+   replace the simple IoU tracker if local data warrants it, and run long shadow
    sessions. Measure event recall, false would-actions per monitored hour with
    its confidence bound, person suppression, track loss, latency, and thermal
    stability.

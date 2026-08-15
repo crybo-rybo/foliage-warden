@@ -10,6 +10,7 @@ review_dir := project_root / "review"
 recorder_dir := project_root / "recorder"
 shadow_dir := project_root / "shadow"
 detection_eval_dir := project_root / "detection-eval"
+assembler_dir := project_root / "assembler"
 
 default: check
 
@@ -79,13 +80,25 @@ sync-detection-eval:
 test-detection-eval: sync-detection-eval
     uv run --project "{{detection_eval_dir}}" --group dev pytest "{{detection_eval_dir}}/tests"
 
+sync-assembler:
+    uv sync --project "{{assembler_dir}}" --group dev --locked
+
+test-assembler: sync-assembler
+    uv run --project "{{assembler_dir}}" --group dev pytest "{{assembler_dir}}/tests"
+
+sync-assembler-inference:
+    uv sync --project "{{assembler_dir}}" --group dev --group inference-test --locked
+
+test-assembler-inference: sync-assembler-inference
+    uv run --project "{{assembler_dir}}" --group dev --group inference-test pytest "{{assembler_dir}}/tests/test_shadow_integration.py"
+
 test-calibration:
     node --test "{{project_root}}/tools/calibration/geometry.test.mjs"
 
 validate-contracts: sync-python
     uv run --project "{{python_dir}}" --extra dev python "{{project_root}}/tools/validate_contracts.py"
 
-lint: sync-python sync-simulator sync-perception sync-training sync-review sync-recorder sync-shadow sync-detection-eval
+lint: sync-python sync-simulator sync-perception sync-training sync-review sync-recorder sync-shadow sync-detection-eval sync-assembler
     cd "{{python_dir}}" && uv run --extra dev ruff check src tests ../tools/validate_contracts.py ../tools/jetson_probe.py
     cd "{{simulator_dir}}" && uv run --extra dev ruff check src tests
     cd "{{perception_dir}}" && uv run --extra desktop --group dev ruff check . ../tools/fetch_model.py ../tools/evaluate_synthetic_scenes.py
@@ -94,9 +107,11 @@ lint: sync-python sync-simulator sync-perception sync-training sync-review sync-
     cd "{{recorder_dir}}" && uv run --group dev ruff check .
     cd "{{shadow_dir}}" && uv run --group dev ruff check src tests
     cd "{{detection_eval_dir}}" && uv run --group dev ruff check .
+    cd "{{assembler_dir}}" && uv run --group dev ruff check .
+    cd "{{assembler_dir}}" && uv run --group dev ruff format --check .
     shellcheck "{{training_dir}}/scripts/smoke.sh" "{{project_root}}/tools/verify_behavior_bridge.sh"
 
-test: test-cpp test-python test-simulator test-perception test-training test-review test-recorder test-shadow test-detection-eval test-calibration validate-contracts
+test: test-cpp test-python test-simulator test-perception test-training test-review test-recorder test-shadow test-detection-eval test-assembler test-calibration validate-contracts
 
 verify-simulator: test-simulator
     uv run --project "{{simulator_dir}}" --extra dev foliage-warden-sim --all
@@ -111,6 +126,8 @@ verify-training: test-training
 verify-behavior-bridge: test-training test-shadow-inference
     bash "{{project_root}}/tools/verify_behavior_bridge.sh"
 
-verify: check verify-simulator verify-perception verify-behavior-bridge
+verify-incident-bridge: test-assembler-inference
+
+verify: check verify-simulator verify-perception verify-behavior-bridge verify-incident-bridge
 
 check: lint test
