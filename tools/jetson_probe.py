@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Emit a read-only JSON inventory of a prospective Jetson runtime target."""
 
 from __future__ import annotations
@@ -6,10 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from pathlib import Path
 import platform
 import shutil
 import subprocess
+from pathlib import Path
 from typing import Any
 
 
@@ -108,7 +107,9 @@ def python_modules() -> dict[str, str | None]:
         try:
             module = __import__(name)
             versions[name] = str(getattr(module, "__version__", "present"))
-        except Exception as exc:  # The failure type is more useful than aborting the probe.
+        # Third-party modules can fail with their own exception types during
+        # import. The probe records the type and continues by design.
+        except Exception as exc:  # noqa: BLE001
             versions[name] = f"import-error:{type(exc).__name__}"
     return versions
 
@@ -164,4 +165,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
