@@ -1,9 +1,10 @@
 # Jetson inference benchmarks
 
 These are software-only capacity measurements of the pinned COCO detector and
-the default temporal-model topology. They use generated input tensors; they do
-not measure camera decode, preprocessing, postprocessing, tracking, detection
-quality, or behavior-recognition quality.
+the default temporal-model topology. The engine tests use generated input
+tensors, while one compatibility check exercises the attached camera without
+retaining frames. They do not measure detection quality or
+behavior-recognition quality.
 
 ## Target and artifact
 
@@ -45,6 +46,31 @@ The detector engine therefore has ample synthetic-inference headroom for a
 30 FPS camera stream on this power profile. That conclusion is limited to
 capacity: the complete observe-only pipeline still needs camera-path timing,
 pre/postprocessing timing, and local-video accuracy evaluation.
+
+### Observe-only camera baseline
+
+The repository's Python perception CLI was also run directly against the
+attached USB camera without display or recording. OpenCV 4.8 used a GStreamer
+MJPEG pipeline at `1280x720@30`; the system OpenCV build exposes GStreamer but
+does not expose a DNN CUDA backend, so this compatibility run used OpenCV CPU
+inference. Ten consecutive frames completed successfully:
+
+| Metric | Result |
+|---|---:|
+| Effective pipeline rate | 2.345 frames/s |
+| Total frame time, mean / p95 | 426.440 / 535.473 ms |
+| Inference time, mean / p95 | 407.305 / 491.702 ms |
+| Preprocess time, mean / p95 | 9.738 / 27.472 ms |
+| Postprocess time, mean / p95 | 6.110 / 7.483 ms |
+| Capture time, mean / p95 | 2.243 / 9.510 ms |
+
+All ten JSONL records were `OBSERVE_ONLY`, reported `UNKNOWN`, and set
+`would_action=false`; no image or video frame was retained. This validates the
+camera, GStreamer, OpenCV 4.8, model-verification, and metadata path, but also
+shows that the Python CPU backend cannot sustain the requested 30 FPS. The
+already-measured TensorRT detector has enough raw headroom; integrating that
+engine with decode, preprocessing, tracking, and postprocessing is the next
+target-runtime optimization gate.
 
 ## Reproduction
 

@@ -33,6 +33,14 @@ version is pinned.
 The first reproducible target-side engine build and synthetic inference results
 are recorded in [`jetson-benchmark.md`](jetson-benchmark.md).
 
+On 14 August 2026, the current policy source built on the available target with
+GCC 11.4.0 in Release mode and `-Werror`; its complete 20-case test binary
+passed under CTest. The same session exercised the attached USB camera through
+the observe-only perception CLI and built both detector and temporal-model
+TensorRT engines. Exact capacity and camera-path results are kept in the linked
+benchmark document. Re-run these checks after a target-image or compiler
+upgrade; they are a compatibility snapshot, not a hardware-actuation test.
+
 ## Boundary
 
 Permitted here: compilation, unit tests, prerecorded replay, mock action logs,
